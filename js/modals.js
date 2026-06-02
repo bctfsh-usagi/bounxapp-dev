@@ -1,10 +1,43 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.5';
+const APP_VERSION = 'dev-2026.06.02.6';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
 const TERMS_EFFECTIVE_DATE = '2026년 월 일';
+
+const DELIVERABLE_TYPES = {
+  public_link: {
+    label: '공개 링크',
+    hint: '공개 가능한 URL, 데모, 문서 링크를 결과물로 제출합니다.',
+    submit: '접근 권한이 열려 있는 공개 URL을 제출하고, 요약에 확인 방법을 적어주세요.',
+  },
+  github: {
+    label: 'GitHub PR / Repo',
+    hint: 'PR, repository, commit, issue 링크를 결과물 기준으로 사용합니다.',
+    submit: 'PR/Repo 링크와 테스트 결과, 리뷰 포인트를 요약에 함께 남겨주세요.',
+  },
+  document: {
+    label: '문서 / 번역',
+    hint: '문서 링크, 번역본, 리서치 결과를 제출합니다.',
+    submit: '문서 접근 권한과 변경 요약을 확인해주세요. 민감한 원문은 비공개 제출을 사용하세요.',
+  },
+  design: {
+    label: '디자인 / Figma',
+    hint: 'Figma, 이미지, 화면 시안, 디자인 시스템 링크를 제출합니다.',
+    submit: 'Figma/시안 링크와 포함된 화면 범위, 수정 기준을 요약에 적어주세요.',
+  },
+  media: {
+    label: '영상 / 콘텐츠',
+    hint: '영상, 게시글, SNS 콘텐츠, 썸네일 등을 제출합니다.',
+    submit: '게시 URL, 원본 파일 전달 방식, 사용 권한/라이선스 메모를 남겨주세요.',
+  },
+  private_delivery: {
+    label: '비공개 전달',
+    hint: '원문, 계약서, 민감 문서처럼 공개 기록에 링크를 남기면 안 되는 작업입니다.',
+    submit: '실제 링크는 기록하지 말고, 별도 채널로 전달한 사실과 검토 가능한 요약만 남겨주세요.',
+  },
+};
 
 // ============ 등록 ============
 function openCreateModal() { 
@@ -13,9 +46,40 @@ function openCreateModal() {
   document.getElementById('createModal').classList.remove('hidden'); 
   document.getElementById('createModal').classList.add('flex');
   // 옵션 초기화
-  setTimeout(() => { updateBountyVisibility(); updateMatchingOption(); updatePaymentOption(); }, 50);
+  setTimeout(() => { updateBountyVisibility(); updateDeliverableTypeHint(); updateMatchingOption(); updatePaymentOption(); }, 50);
 }
 function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); document.getElementById('createModal').classList.remove('flex'); }
+
+function getDeliverableTypeMeta(type) {
+  return DELIVERABLE_TYPES[type] || DELIVERABLE_TYPES.public_link;
+}
+
+function parseDeliverableType(desc) {
+  const match = (desc || '').match(/^\[결과물 유형:\s*([^\]]+)\]/m);
+  if (!match) return { type: 'public_link', label: getDeliverableTypeMeta('public_link').label };
+  const label = match[1].trim();
+  const type = Object.keys(DELIVERABLE_TYPES).find(key => DELIVERABLE_TYPES[key].label === label) || 'public_link';
+  return { type, label };
+}
+
+function updateDeliverableTypeHint() {
+  const selected = document.querySelector('input[name="deliverableType"]:checked')?.value || 'public_link';
+  const meta = getDeliverableTypeMeta(selected);
+  document.querySelectorAll('#createQualitySection .deliverable-type-option').forEach(option => {
+    const checked = option.closest('label')?.querySelector('input')?.checked;
+    option.classList.toggle('border-violet-300', !!checked);
+    option.classList.toggle('bg-violet-50', !!checked);
+  });
+  const hint = document.getElementById('deliverableTypeHint');
+  if (hint) hint.textContent = meta.hint;
+  if (selected === 'private_delivery') {
+    const privateRadio = document.querySelector('input[name="bountyVisibility"][value="private"]');
+    if (privateRadio) {
+      privateRadio.checked = true;
+      updateBountyVisibility();
+    }
+  }
+}
 
 function ensureCreateQualityControls() {
   if (document.getElementById('acceptanceCriteriaInput')) return;
@@ -32,6 +96,20 @@ function ensureCreateQualityControls() {
       <div class="leading-relaxed">결과물 형식, 승인 기준, 수정 가능 범위를 미리 적어두면 나중에 승인/수정요청/분쟁이 훨씬 줄어듭니다.</div>
     </div>
     <div>
+      <label class="block text-sm font-medium text-neutral-700 mb-2">결과물 유형</label>
+      <div class="grid grid-cols-2 gap-2">
+        ${Object.entries(DELIVERABLE_TYPES).map(([key, meta], idx) => `
+          <label class="cursor-pointer">
+            <input type="radio" name="deliverableType" value="${key}" ${idx === 0 ? 'checked' : ''} class="sr-only" onchange="updateDeliverableTypeHint()" />
+            <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50">
+              <div class="text-sm font-semibold text-neutral-800">${meta.label}</div>
+            </div>
+          </label>
+        `).join('')}
+      </div>
+      <div id="deliverableTypeHint" class="mt-2 text-[11px] text-neutral-500 leading-relaxed">${DELIVERABLE_TYPES.public_link.hint}</div>
+    </div>
+    <div>
       <label class="block text-sm font-medium text-neutral-700 mb-1.5">검수 기준 / 결과물 기준</label>
       <textarea id="acceptanceCriteriaInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="3" placeholder="예: 1) 구글 문서 링크로 제출 2) 핵심 용어집 준수 3) 오탈자 검수 포함 4) 수정 요청은 마일스톤당 최대 2회"></textarea>
     </div>
@@ -39,8 +117,10 @@ function ensureCreateQualityControls() {
   target.insertAdjacentElement('afterend', section);
 }
 
-function buildFinalDescription(desc, title, bountyVisibility, acceptanceCriteria) {
+function buildFinalDescription(desc, title, bountyVisibility, acceptanceCriteria, deliverableType) {
   let body = desc || title;
+  const meta = getDeliverableTypeMeta(deliverableType);
+  body = `[결과물 유형: ${meta.label}]\n${body}`;
   const criteria = (acceptanceCriteria || '').trim();
   if (criteria) {
     body += `\n\n[검수 기준 / 결과물 기준]\n${criteria}`;
@@ -356,6 +436,7 @@ function submitBounty(termsConfirmed = false) {
   const categoryId = document.getElementById('categoryInput').value;
   const desc = document.getElementById('descInput').value.trim();
   const acceptanceCriteria = document.getElementById('acceptanceCriteriaInput')?.value.trim() || '';
+  const deliverableType = document.querySelector('input[name="deliverableType"]:checked')?.value || 'public_link';
   const reward = parseFloat(document.getElementById('rewardInput').value);
   const deadlineSelect = document.getElementById('deadlineInput').value;
   const bountyVisibility = document.querySelector('input[name="bountyVisibility"]:checked')?.value || 'public';
@@ -390,7 +471,7 @@ function submitBounty(termsConfirmed = false) {
   }
 
   const contractMatchingType = matchingType === 'firstcome' ? 'first_come' : 'approval';
-  const finalDescription = buildFinalDescription(desc, title, bountyVisibility, acceptanceCriteria);
+  const finalDescription = buildFinalDescription(desc, title, bountyVisibility, acceptanceCriteria, deliverableType);
   const executeMsg = {
     create_bounty: {
       title: title,
@@ -558,6 +639,8 @@ async function openDetail(bountyId) {
     review: '<span class="badge-review text-xs font-semibold px-2 py-0.5 rounded-full">검토 대기</span>',
     done: '<span class="badge-done text-xs font-semibold px-2 py-0.5 rounded-full">완료</span>',
   };
+  const deliverableInfo = parseDeliverableType(b.desc);
+  const deliverableMeta = getDeliverableTypeMeta(deliverableInfo.type);
   let html = '<div class="space-y-4">';
   html += '<div class="flex items-center justify-between flex-wrap gap-2">';
   html += `<div class="text-xs text-neutral-500 font-medium">${cat.icon} ${cat.name}</div>`;
@@ -573,6 +656,7 @@ async function openDetail(bountyId) {
   html += `<div><h2 class="font-display text-xl font-bold tracking-tight mb-2">${escapeHtml(b.title)}</h2>`;
   if (b.desc) html += `<p class="text-sm text-neutral-600 leading-relaxed whitespace-pre-wrap">${escapeHtml(b.desc)}</p>`;
   html += '</div>';
+  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">결과물 유형: ${escapeHtml(deliverableMeta.label)}</div><div class="leading-relaxed">${escapeHtml(deliverableMeta.hint)}</div></div>`;
   html += '<div class="grid grid-cols-2 gap-3">';
   html += `<div class="bg-neutral-50 rounded-xl p-3" style="border:1.5px solid var(--bx-line,#d9cbb8)"><div class="text-xs text-neutral-500 mb-1">보상</div><div class="font-display text-lg font-bold">${b.reward} XPLA</div></div>`;
   html += `<div class="bg-neutral-50 rounded-xl p-3" style="border:1.5px solid var(--bx-line,#d9cbb8)"><div class="text-xs text-neutral-500 mb-1">마감</div><div class="font-display text-lg font-bold">${b.deadline}</div></div>`;
@@ -788,6 +872,8 @@ function openReview(bountyId) {
   const isMilestone = b.paymentType === 'milestone' && b.milestones;
   const currentMs = isMilestone ? b.milestones[b.currentMilestone || 0] : null;
   const reviewReward = currentMs ? currentMs.reward : b.reward;
+  const deliverableInfo = parseDeliverableType(b.desc);
+  const deliverableMeta = getDeliverableTypeMeta(deliverableInfo.type);
   
   let html = '<div class="space-y-4">';
   
@@ -800,12 +886,16 @@ function openReview(bountyId) {
   }
 
   const parsedSubmission = parseSubmissionSummary(b.submission.summary);
+  const safeProofUrl = normalizeProofUrl(parsedSubmission.proofUrl);
+  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">결과물 유형: ${escapeHtml(deliverableMeta.label)}</div><div class="leading-relaxed">${escapeHtml(deliverableMeta.submit)}</div></div>`;
   
   html += '<div class="bg-violet-50/10 rounded-xl p-3.5 border border-violet-100/30">';
   html += '<div class="flex items-center gap-2 mb-2"><svg class="w-4 h-4 text-violet-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><span class="text-xs font-semibold text-violet-200">Proof Bundle</span></div>';
   html += `<div class="font-mono text-xs text-violet-200/80 break-all">${b.submission.proofBundle}</div></div>`;
-  if (parsedSubmission.proofUrl) {
-    html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">결과물 링크</div><a href="${escapeHtml(parsedSubmission.proofUrl)}" target="_blank" rel="noopener noreferrer" class="block bg-neutral-50 rounded-xl p-3.5 text-sm text-violet-200 underline break-all">${escapeHtml(parsedSubmission.proofUrl)}</a></div>`;
+  if (safeProofUrl) {
+    html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">결과물 링크</div><a href="${escapeHtml(safeProofUrl)}" target="_blank" rel="noopener noreferrer" class="block bg-neutral-50 rounded-xl p-3.5 text-sm text-violet-200 underline break-all">${escapeHtml(safeProofUrl)}</a></div>`;
+  } else if (parsedSubmission.proofUrl) {
+    html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">링크 확인 필요</div><div class="leading-relaxed">제출 기록에 올바르지 않은 링크가 포함되어 표시하지 않았습니다. 작업자에게 다시 제출을 요청하세요.</div></div>';
   }
   html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">결과물 요약</div><div class="bg-neutral-50 rounded-xl p-3.5 text-sm text-neutral-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(parsedSubmission.body)}</div></div>`;
   html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">작업자 정보</div><div class="bg-neutral-50 rounded-xl p-3 text-xs"><div class="flex justify-between text-neutral-500"><span>주소</span><span class="font-mono text-neutral-700">${b.workerShort}</span></div></div></div>`;
@@ -998,6 +1088,9 @@ openWorkSubmit = function(bountyId) {
   const isMilestone = b.paymentType === 'milestone' && b.milestones;
   const currentMs = isMilestone ? b.milestones[b.currentMilestone || 0] : null;
   const submitReward = currentMs ? currentMs.reward : b.reward;
+  const deliverableInfo = parseDeliverableType(b.desc);
+  const deliverableMeta = getDeliverableTypeMeta(deliverableInfo.type);
+  const defaultPrivate = deliverableInfo.type === 'private_delivery';
 
   let html = '<div class="space-y-4">';
   html += `<div class="bg-violet-50/10 rounded-xl p-3.5 border border-violet-100/30 text-sm"><div class="font-semibold text-white mb-1">${escapeHtml(b.title)}</div><div class="text-xs text-white/65">${escapeHtml(b.desc || '설명 없음')}</div></div>`;
@@ -1010,9 +1103,10 @@ openWorkSubmit = function(bountyId) {
     html += '</div>';
   }
 
+  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">결과물 유형: ${escapeHtml(deliverableMeta.label)}</div><div class="leading-relaxed">${escapeHtml(deliverableMeta.submit)}</div></div>`;
   html += '<div id="proofVisibilityGroup"><label class="block text-sm font-medium text-neutral-700 mb-2">결과물 공개 방식</label><div class="grid grid-cols-2 gap-2">';
-  html += '<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="public" checked class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">공개 링크</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크가 제출 기록에 남습니다.</div></div></label>';
-  html += '<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="private" class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">비공개 제출</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크를 공개 기록에 남기지 않습니다.</div></div></label>';
+  html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="public" ${defaultPrivate ? '' : 'checked'} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">공개 링크</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크가 제출 기록에 남습니다.</div></div></label>`;
+  html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="private" ${defaultPrivate ? 'checked' : ''} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">비공개 제출</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크를 공개 기록에 남기지 않습니다.</div></div></label>`;
   html += '</div></div>';
   html += '<div id="publicProofSection"><label class="block text-sm font-medium text-neutral-700 mb-1.5">결과물 링크</label><input id="proofUrlInput" type="url" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm" placeholder="https://drive.google.com/... 또는 https://github.com/..." /></div>';
   html += '<div id="privateProofSection" class="hidden bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">비공개 결과물 안내</div><div class="leading-relaxed">번역 원문, 문서 링크, 파일 링크처럼 민감한 자료는 온체인 제출 내용에 적지 마세요. 의뢰자와 합의한 외부 채널로 전달하고, 여기에는 검토 가능한 요약만 남깁니다.</div><input id="privateProofRefInput" class="input-field w-full px-3 py-2 rounded-lg text-xs mt-2" placeholder="선택: 의뢰자에게 전달한 파일명/버전/채널 메모" /></div>';
