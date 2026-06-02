@@ -266,7 +266,7 @@ function renderActionSection() {
       badge = '<span class="badge-matching-approval text-[10px] font-semibold px-2 py-0.5 rounded-full">지원 완료</span>';
       actionBtn = `<button onclick="event.stopPropagation(); openMyApplication('${item.id}')" class="w-full mt-2 px-3 py-2 rounded-lg bg-neutral-100 text-neutral-700 text-xs font-semibold">지원 내용 보기</button>`;
     } else if (item.actionType === 'select-applicant') {
-      const applicantCount = item.applicants ? Object.keys(item.applicants).length : 0;
+      const applicantCount = item.applicantCount ?? item._applicants?.length ?? (item.applicants ? Object.keys(item.applicants).length : 0);
       actionLabel = '🎯 작업자 선택';
       badge = `<span class="badge-matching-approval text-[10px] font-semibold px-2 py-0.5 rounded-full">지원 ${applicantCount}명</span>`;
       actionBtn = `<button onclick="event.stopPropagation(); openApplicantsModal('${item.id}')" class="w-full mt-2 px-3 py-2 rounded-lg bg-violet-600 text-white text-xs font-semibold hover:bg-violet-700">지원자 검토하기 →</button>`;

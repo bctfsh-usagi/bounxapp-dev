@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.3';
+const APP_VERSION = 'dev-2026.06.02.4';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
