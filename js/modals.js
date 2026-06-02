@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.4';
+const APP_VERSION = 'dev-2026.06.02.5';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -9,12 +9,45 @@ const TERMS_EFFECTIVE_DATE = '2026년 월 일';
 // ============ 등록 ============
 function openCreateModal() { 
   ensureBountyVisibilityControls();
+  ensureCreateQualityControls();
   document.getElementById('createModal').classList.remove('hidden'); 
   document.getElementById('createModal').classList.add('flex');
   // 옵션 초기화
   setTimeout(() => { updateBountyVisibility(); updateMatchingOption(); updatePaymentOption(); }, 50);
 }
 function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); document.getElementById('createModal').classList.remove('flex'); }
+
+function ensureCreateQualityControls() {
+  if (document.getElementById('acceptanceCriteriaInput')) return;
+  const descInput = document.getElementById('descInput');
+  const visibilitySection = document.getElementById('bountyVisibilitySection');
+  const target = visibilitySection || descInput?.closest('div');
+  if (!target) return;
+  const section = document.createElement('div');
+  section.id = 'createQualitySection';
+  section.className = 'space-y-2';
+  section.innerHTML = `
+    <div class="rounded-xl p-3 bg-white/10 border border-white/15 text-xs text-white/85">
+      <div class="font-semibold text-white mb-1">등록 전에 정하면 좋은 기준</div>
+      <div class="leading-relaxed">결과물 형식, 승인 기준, 수정 가능 범위를 미리 적어두면 나중에 승인/수정요청/분쟁이 훨씬 줄어듭니다.</div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-neutral-700 mb-1.5">검수 기준 / 결과물 기준</label>
+      <textarea id="acceptanceCriteriaInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="3" placeholder="예: 1) 구글 문서 링크로 제출 2) 핵심 용어집 준수 3) 오탈자 검수 포함 4) 수정 요청은 마일스톤당 최대 2회"></textarea>
+    </div>
+  `;
+  target.insertAdjacentElement('afterend', section);
+}
+
+function buildFinalDescription(desc, title, bountyVisibility, acceptanceCriteria) {
+  let body = desc || title;
+  const criteria = (acceptanceCriteria || '').trim();
+  if (criteria) {
+    body += `\n\n[검수 기준 / 결과물 기준]\n${criteria}`;
+  }
+  if (bountyVisibility !== 'private') return body;
+  return `[비공개 작업]\n민감한 원문/결과물 링크는 공개 기록에 남기지 말고, 승인된 작업자와 별도 채널로 공유하세요.\n\n${body}`;
+}
 
 function termsStorageKey(action) {
   return `bounx_terms_${TERMS_VERSION}_${action}`;
@@ -322,6 +355,7 @@ function submitBounty(termsConfirmed = false) {
   const title = document.getElementById('titleInput').value.trim();
   const categoryId = document.getElementById('categoryInput').value;
   const desc = document.getElementById('descInput').value.trim();
+  const acceptanceCriteria = document.getElementById('acceptanceCriteriaInput')?.value.trim() || '';
   const reward = parseFloat(document.getElementById('rewardInput').value);
   const deadlineSelect = document.getElementById('deadlineInput').value;
   const bountyVisibility = document.querySelector('input[name="bountyVisibility"]:checked')?.value || 'public';
@@ -356,9 +390,7 @@ function submitBounty(termsConfirmed = false) {
   }
 
   const contractMatchingType = matchingType === 'firstcome' ? 'first_come' : 'approval';
-  const finalDescription = bountyVisibility === 'private'
-    ? `[비공개 작업]\n민감한 원문/결과물 링크는 공개 기록에 남기지 말고, 승인된 작업자와 별도 채널로 공유하세요.\n\n${desc || title}`
-    : (desc || title);
+  const finalDescription = buildFinalDescription(desc, title, bountyVisibility, acceptanceCriteria);
   const executeMsg = {
     create_bounty: {
       title: title,
@@ -408,8 +440,9 @@ function openApplyMessageModal(bountyId) {
 
   let html = '<div class="space-y-4">';
   html += `<div class="comment-area rounded-xl p-3.5"><div class="text-xs text-white/55 mb-1">${getCategoryById(b.categoryId).icon} ${getCategoryById(b.categoryId).name} · 🎯 승인 필요</div><div class="font-semibold text-white text-sm">${escapeHtml(b.title)}</div></div>`;
-  html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">자기소개 메시지</label><textarea id="applyMessageInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="4" placeholder="왜 내가 이 작업에 적합한지 짧게 소개해주세요. 예: 부동산 분야 5년 경험, 3일 안에 마무리 가능합니다."></textarea></div>';
-  html += '<div class="bg-violet-50/10 rounded-xl p-3 text-xs border border-violet-100/30"><div class="font-semibold text-violet-200 mb-1">🎯 승인 대기</div><div class="text-white/60 leading-relaxed">의뢰자가 지원자 중에서 작업자를 선택해요. 선택되면 알림이 옵니다.</div></div>';
+  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">지원 메시지에 포함하면 좋은 내용</div><div class="leading-relaxed">가능 일정, 작업 방식, 관련 경험, 확인이 필요한 질문을 함께 적으면 의뢰자가 비교하기 쉽습니다.</div></div>';
+  html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">지원 메시지</label><textarea id="applyMessageInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="5" placeholder="예: 1) 3일 안에 초안 제출 가능 2) 관련 번역 경험 있음 3) 결과물은 구글 문서로 전달 4) 원문 용어집이 있다면 먼저 확인하고 싶습니다."></textarea></div>';
+  html += '<div class="bg-violet-50/10 rounded-xl p-3 text-xs border border-violet-100/30"><div class="font-semibold text-violet-200 mb-1">🎯 승인 대기</div><div class="text-white/60 leading-relaxed">의뢰자가 지원자 중에서 작업자를 선택합니다. 선정 전에는 보상이 지급되지 않고, 선정 후 작업 진행 상태로 바뀝니다.</div></div>';
   html += '<div class="flex gap-2">';
   html += '<button onclick="closeApplyModal()" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">취소</button>';
   html += `<button onclick="submitApplication('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">이 작업 지원하기</button>`;
@@ -788,6 +821,16 @@ function openReview(bountyId) {
   document.getElementById('reviewModal').classList.add('flex');
 }
 function closeReviewModal() { document.getElementById('reviewModal').classList.add('hidden'); document.getElementById('reviewModal').classList.remove('flex'); }
+
+function approveWorkWithChecklist(bountyId) {
+  const checks = Array.from(document.querySelectorAll('#approvalChecklist input[type="checkbox"]'));
+  if (checks.length > 0 && checks.some(check => !check.checked)) {
+    showToast('승인 전 체크리스트를 모두 확인해주세요');
+    return;
+  }
+  approveWork(bountyId);
+}
+
 function approveWork(bountyId) {
   const b = bounties[bountyId];
   if (!b) return;
@@ -924,7 +967,10 @@ openReview = function(bountyId) {
     content.insertAdjacentHTML('afterbegin', '<div id="privateSubmissionNotice" class="mb-4 bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">비공개 제출</div><div class="leading-relaxed">결과물 링크는 공개 기록에 남기지 않았습니다. 의뢰자와 합의한 별도 채널에서 받은 자료를 확인한 뒤 승인하세요.</div></div>');
   }
   if (buttonRow && !document.getElementById('revisionPolicyNotice')) {
+    buttonRow.insertAdjacentHTML('beforebegin', `<div id="approvalChecklist" class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 border border-neutral-200"><div class="font-semibold text-neutral-800 mb-2">승인 전 체크리스트</div><label class="flex items-start gap-2 mb-1.5"><input type="checkbox" class="mt-0.5" /><span>등록된 작업 범위와 결과물이 일치합니다.</span></label><label class="flex items-start gap-2 mb-1.5"><input type="checkbox" class="mt-0.5" /><span>${parsed.visibility === 'private' ? '별도 채널로 받은 비공개 결과물을 확인했습니다.' : '결과물 링크에 접근할 수 있고 내용을 확인했습니다.'}</span></label><label class="flex items-start gap-2"><input type="checkbox" class="mt-0.5" /><span>승인하면 해당 마일스톤 보상이 정산되는 것을 이해했습니다.</span></label></div>`);
     buttonRow.insertAdjacentHTML('beforebegin', `<div id="revisionPolicyNotice" class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15 leading-relaxed">수정 요청은 마일스톤당 최대 ${MAX_REVISION_REQUESTS}회를 권장합니다. 계속 반려되거나 의뢰자가 반복해서 거절하는 경우에는 분쟁/평가 절차로 넘기는 구조가 필요합니다.</div>`);
+    const approveButton = buttonRow.querySelector('button[onclick*="approveWork"]');
+    if (approveButton) approveButton.setAttribute('onclick', `approveWorkWithChecklist('${b.id}')`);
   }
 };
 
@@ -934,9 +980,17 @@ openRejectReason = function(bountyId) {
   const content = document.getElementById('reviewContent');
   const buttonRow = Array.from(content?.querySelectorAll('.flex.gap-2') || []).pop();
   if (buttonRow && !document.getElementById('rejectLimitNotice')) {
+    buttonRow.insertAdjacentHTML('beforebegin', '<div id="rejectTemplateTools" class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 border border-neutral-200"><div class="font-semibold text-neutral-800 mb-2">수정요청 템플릿</div><div class="grid grid-cols-1 gap-1.5"><button type="button" onclick="fillRejectTemplate(\'결과물 링크 접근 권한이 없어 확인할 수 없습니다. 접근 권한을 열어주시거나 확인 가능한 링크를 다시 제출해주세요.\')" class="px-3 py-2 rounded-lg bg-white border border-neutral-200 text-left">링크 접근 권한 문제</button><button type="button" onclick="fillRejectTemplate(\'등록된 검수 기준 중 일부가 충족되지 않았습니다. 누락된 항목을 보완하고, 변경 요약을 함께 남겨주세요.\')" class="px-3 py-2 rounded-lg bg-white border border-neutral-200 text-left">검수 기준 미충족</button><button type="button" onclick="fillRejectTemplate(\'결과물 요약만으로는 확인이 어렵습니다. 어떤 파일/문서에서 무엇을 확인해야 하는지 구체적인 위치를 추가해주세요.\')" class="px-3 py-2 rounded-lg bg-white border border-neutral-200 text-left">확인 방법 부족</button></div></div>');
     buttonRow.insertAdjacentHTML('beforebegin', `<div id="rejectLimitNotice" class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">수정 요청 원칙</div><div class="leading-relaxed">마일스톤당 수정 요청은 최대 ${MAX_REVISION_REQUESTS}회를 권장합니다. 이후에도 해결되지 않으면 반복 반려 대신 분쟁/평가 절차로 넘겨야 합니다.</div></div>`);
   }
 };
+
+function fillRejectTemplate(text) {
+  const input = document.getElementById('rejectReasonInput');
+  if (!input) return;
+  input.value = text;
+  input.focus();
+}
 
 openWorkSubmit = function(bountyId) {
   const b = bounties[bountyId];
@@ -962,6 +1016,7 @@ openWorkSubmit = function(bountyId) {
   html += '</div></div>';
   html += '<div id="publicProofSection"><label class="block text-sm font-medium text-neutral-700 mb-1.5">결과물 링크</label><input id="proofUrlInput" type="url" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm" placeholder="https://drive.google.com/... 또는 https://github.com/..." /></div>';
   html += '<div id="privateProofSection" class="hidden bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">비공개 결과물 안내</div><div class="leading-relaxed">번역 원문, 문서 링크, 파일 링크처럼 민감한 자료는 온체인 제출 내용에 적지 마세요. 의뢰자와 합의한 외부 채널로 전달하고, 여기에는 검토 가능한 요약만 남깁니다.</div><input id="privateProofRefInput" class="input-field w-full px-3 py-2 rounded-lg text-xs mt-2" placeholder="선택: 의뢰자에게 전달한 파일명/버전/채널 메모" /></div>';
+  html += '<div class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 border border-neutral-200"><div class="font-semibold text-neutral-800 mb-1">제출 전 확인</div><div class="leading-relaxed">요약에는 완료한 범위, 확인 방법, 남은 이슈를 적어주세요. 공개 링크 제출 시 접근 권한을 열어두고, 비공개 제출 시 실제 링크는 공개 기록에 남기지 마세요.</div></div>';
   html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">결과물 요약</label><textarea id="submissionInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="5" placeholder="작업 결과와 확인 방법을 정리해주세요..."></textarea></div>';
   html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">증빙 지문 생성</div><div class="leading-relaxed">제출 내용으로 고유 해시를 만들고 컨트랙트에는 그 해시와 요약만 기록합니다. 비공개 제출은 실제 링크를 기록하지 않습니다.</div></div>';
   html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">예상 보상</div><div>승인 시 <strong>${(submitReward * 0.9).toFixed(1)} XPLA</strong>가 정산됩니다. (90%)</div></div>`;

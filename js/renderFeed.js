@@ -308,6 +308,20 @@ function updateActivityDot() {
   });
 }
 
+function getActivityNextStep(b, isMine, isApplied) {
+  if (isApplied) return '의뢰자의 선정을 기다리는 중입니다.';
+  if (isMine && b.status === 'open' && b.matchingType === 'approval') return `지원자 ${b.applicantCount ?? b._applicants?.length ?? 0}명을 검토할 수 있습니다.`;
+  if (isMine && b.status === 'progress') return '작업자의 결과물 제출을 기다리는 중입니다.';
+  if (isMine && b.status === 'review') return '결과물을 확인한 뒤 승인 또는 수정요청을 선택하세요.';
+  if (!isMine && b.status === 'progress') {
+    if (b.revisionRequest) return '수정요청 내용을 확인하고 보완 결과물을 다시 제출하세요.';
+    return '현재 마일스톤의 결과물을 제출하세요.';
+  }
+  if (!isMine && b.status === 'review') return '의뢰자의 검토를 기다리는 중입니다.';
+  if (b.status === 'done') return '정산이 완료된 작업입니다.';
+  return '상세 화면에서 다음 단계를 확인하세요.';
+}
+
 // ============ 홈 ============
 function renderHome() {
   renderActionSection();
@@ -517,6 +531,7 @@ function renderActivity() {
     html += '</div>';
     html += `<div class="font-medium text-neutral-900 mb-1 truncate">${escapeHtml(b.title)}</div>`;
     html += `<div class="text-xs text-neutral-500">${timeAgo(b.createdAt)}</div>`;
+    html += `<div class="text-xs text-neutral-600 mt-2 leading-relaxed">${escapeHtml(getActivityNextStep(b, isMine, isApplied))}</div>`;
     html += '</div>';
     html += '<div class="text-right flex-shrink-0">';
     html += `<div class="font-display font-bold">${b.reward} <span class="text-xs font-medium text-neutral-500">XPLA</span></div>`;
