@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>bounX 이용약관 초안</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #15120f;
+      color: rgba(255,255,255,.88);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .panel {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .temp {
+      background: rgba(14,165,233,.16);
+      border: 1px solid rgba(125,211,252,.32);
+      color: #e0f2fe;
+    }
+  </style>
+</head>
+<body>
+  <main class="mx-auto max-w-3xl px-5 py-10">
+    <a href="./" class="text-sm text-white/55 hover:text-white">← bounX로 돌아가기</a>
+
+    <header class="mt-6 mb-8">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <h1 class="text-3xl font-black tracking-tight text-white">bounX 이용약관 초안</h1>
+        <span class="temp rounded-full px-2.5 py-1 text-xs font-bold">법무 검토 전</span>
+      </div>
+      <p class="text-sm leading-6 text-white/62">
+        본 문서는 서비스 적용을 위한 초안입니다. 실제 배포 전 운영 주체, 개인정보 처리방침,
+        환불 정책, 분쟁 처리 방식, 스마트 컨트랙트 동작과 반드시 대조해 확정해야 합니다.
+      </p>
+    </header>
+
+    <section class="panel rounded-2xl p-5 mb-6">
+      <h2 class="text-lg font-bold text-white mb-3">임시 운영 정보</h2>
+      <div class="grid gap-2 text-sm">
+        <div>운영자: <strong class="text-white">bounX 운영팀</strong> <span class="temp rounded px-1.5 py-0.5 text-[11px] font-bold">임시</span></div>
+        <div>연락처: <strong class="text-white">contact@example.com</strong> <span class="temp rounded px-1.5 py-0.5 text-[11px] font-bold">임시</span></div>
+        <div>시행일자: <strong class="text-white">2026년 월 일</strong> <span class="temp rounded px-1.5 py-0.5 text-[11px] font-bold">임시</span></div>
+      </div>
+    </section>
+
+    <section class="space-y-5 text-sm leading-7 text-white/76">
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">1. 서비스의 성격</h2>
+        <p>bounX는 의뢰자와 수행자가 바운티를 등록, 신청, 수행, 검토, 정산할 수 있도록 지원하는 테스트넷 기반 마켓플레이스입니다. 운영자는 이용자 간 계약의 직접 당사자가 아니며, 결과물 품질, 수행 가능성, 수익성 또는 특정 정산 결과를 보장하지 않습니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">2. 지갑 및 온체인 거래</h2>
+        <p>이용자는 자신의 지갑, 개인키, 시드 문구, 비밀번호 및 서명 권한을 스스로 관리해야 합니다. 블록체인 거래는 실행 후 취소 또는 되돌림이 어렵거나 불가능할 수 있으며, 네트워크 수수료는 반환되지 않을 수 있습니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">3. 바운티 등록</h2>
+        <p>의뢰자는 바운티 등록 전 작업 내용, 검수 기준, 제출 형식, 마감일, 보상 조건을 명확히 기재해야 합니다. 정보가 부정확하거나 불충분하여 발생하는 분쟁, 지연 또는 손해는 원칙적으로 의뢰자가 부담합니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">4. 작업 신청 및 수행</h2>
+        <p>수행자는 바운티 조건, 보상, 마감일, 검수 기준 및 정산 방식을 확인한 뒤 신청해야 합니다. 제출물이 바운티 조건에 미달하거나 제3자의 권리, 법령, 계약, 라이선스 또는 플랫폼 정책을 침해하는 경우 수정 요청, 거부 또는 분쟁 절차가 진행될 수 있습니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">5. 결과물 검토와 정산</h2>
+        <p>의뢰자가 결과물을 승인하면 해당 바운티 또는 마일스톤 보상은 스마트 컨트랙트 규칙에 따라 정산될 수 있습니다. 승인 이후 온체인 정산이 실행된 경우 해당 거래는 취소 또는 환불이 제한될 수 있습니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">6. 분쟁 처리</h2>
+        <p>의뢰자와 수행자 사이에 결과물 품질, 승인 여부, 마감 준수, 보상 정산 등에 관한 분쟁이 발생할 수 있습니다. 분쟁 처리 방식, 검증자의 권한, 검증 보상 및 최종성은 스마트 컨트랙트와 서비스 정책에 따릅니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">7. 위험 고지</h2>
+        <p>스마트 컨트랙트 버그, 취약점, 해킹, 지갑 오류, RPC 오류, 네트워크 장애, 서명 실수, 주소 입력 오류, 피싱, AI 결과물 오류 등이 발생할 수 있습니다. 서비스 화면의 예상 수수료와 정산액은 실제 온체인 실행 결과와 다를 수 있습니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">8. 운영자의 책임 제한</h2>
+        <p>운영자는 안정적인 서비스 제공을 위해 합리적인 노력을 다합니다. 다만 이용자 간 바운티 계약의 성립, 수행, 결과물 품질, 승인 여부, 보상 지급 결과를 보장하지 않으며, 운영자의 고의 또는 중대한 과실이 없는 한 이용자 귀책사유나 외부 요인으로 인한 손해에 책임을 지지 않습니다.</p>
+      </article>
+
+      <article class="panel rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white mb-2">9. 개인정보 및 비공개 자료</h2>
+        <p>블록체인에 기록된 거래 내역, 지갑 주소, 컨트랙트 이벤트 등은 공개적으로 조회될 수 있습니다. 이용자는 개인정보, 비밀정보, 민감정보 또는 제3자의 권리가 포함된 자료를 바운티 설명이나 공개 결과물에 포함하지 않도록 주의해야 합니다.</p>
+      </article>
+    </section>
+
+    <section class="panel rounded-2xl p-5 mt-6">
+      <h2 class="text-lg font-bold text-white mb-3">정식 배포 전 확정 필요</h2>
+      <ul class="list-disc pl-5 space-y-1 text-sm text-white/72">
+        <li>운영자명 또는 법인명</li>
+        <li>운영자 연락처</li>
+        <li>시행일자</li>
+        <li>개인정보 처리방침</li>
+        <li>환불 가능 조건</li>
+        <li>14일 자동 정산의 실제 컨트랙트 동작</li>
+        <li>검증자 및 분쟁 절차의 실제 적용 여부</li>
+        <li>보상 분배 비율</li>
+        <li>준거법 및 관할 법원</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

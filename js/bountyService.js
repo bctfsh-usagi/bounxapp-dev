@@ -78,12 +78,28 @@ async function loadContractBounties() {
       const mapped = mapContractBounty(r);
       bounties[mapped.id] = mapped;
     });
+    await enrichMyApplications();
     if (currentTab === 'home') renderHome();
     else renderActivity();
   } catch (e) {
     console.error('Failed to load bounties:', e);
     showToast('바운티 로딩 실패: ' + e.message);
   }
+}
+
+async function enrichMyApplications() {
+  if (!currentUser) return;
+  const targets = Object.values(bounties).filter(b =>
+    b.status === 'open'
+    && b.matchingType === 'approval'
+    && b.requester !== currentUser.address
+  );
+  await Promise.allSettled(targets.map(async b => {
+    const applicants = await fetchApplicants(b.numId);
+    b._applicants = applicants;
+    b.applicantCount = applicants.length;
+    b.myApplication = applicants.find(a => a.worker === currentUser.address) || null;
+  }));
 }
 
 function startAutoRefresh() {

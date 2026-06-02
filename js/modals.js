@@ -1,5 +1,9 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
+const TERMS_VERSION = '2026-06-draft';
+const TERMS_OPERATOR_NAME = 'bounX 운영팀';
+const TERMS_CONTACT = 'contact@example.com';
+const TERMS_EFFECTIVE_DATE = '2026년 월 일';
 
 // ============ 등록 ============
 function openCreateModal() { 
@@ -10,6 +14,136 @@ function openCreateModal() {
   setTimeout(() => { updateBountyVisibility(); updateMatchingOption(); updatePaymentOption(); }, 50);
 }
 function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); document.getElementById('createModal').classList.remove('flex'); }
+
+function termsStorageKey(action) {
+  return `bounx_terms_${TERMS_VERSION}_${action}`;
+}
+
+function hasAcceptedTerms(action) {
+  try { return localStorage.getItem(termsStorageKey(action)) === 'accepted'; }
+  catch (e) { return false; }
+}
+
+function markTermsAccepted(action) {
+  try { localStorage.setItem(termsStorageKey(action), 'accepted'); } catch (e) {}
+}
+
+function ensureTermsConsentModal() {
+  if (document.getElementById('termsConsentModal')) return;
+  const modal = document.createElement('div');
+  modal.id = 'termsConsentModal';
+  modal.className = 'hidden fixed inset-0 z-[80] modal-backdrop items-center justify-center p-4';
+  modal.innerHTML = `
+    <div class="modal-content rounded-3xl w-full max-w-lg max-h-[86vh] overflow-y-auto shadow-2xl">
+      <div class="p-6 border-b border-white/10">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <h3 id="termsConsentTitle" class="font-display text-xl font-bold tracking-tight text-white">약관 확인</h3>
+              <span class="px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-300/30 text-[10px] font-bold text-sky-100">임시 정보 포함</span>
+            </div>
+            <p id="termsConsentSubtitle" class="text-xs text-white/60 leading-relaxed"></p>
+          </div>
+          <button onclick="closeTermsConsentModal()" class="text-white/45 hover:text-white"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+      </div>
+      <div id="termsConsentBody" class="p-6"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function closeTermsConsentModal() {
+  const modal = document.getElementById('termsConsentModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  window.pendingTermsAgree = null;
+}
+
+function getTermsConsentCopy(action) {
+  if (action === 'create') {
+    return {
+      title: '바운티 등록 전 확인',
+      subtitle: '보상 예치와 온체인 거래가 실행되기 전에 핵심 위험을 확인해주세요.',
+      items: [
+        '등록한 보상은 스마트 컨트랙트에 예치되며, 상태에 따라 취소나 환불이 제한될 수 있습니다.',
+        '작업 내용, 검수 기준, 제출 형식이 불명확해서 생기는 분쟁은 원칙적으로 의뢰자가 부담합니다.',
+        '운영자는 의뢰자와 수행자 간 계약의 직접 당사자가 아니며 결과물 품질이나 보상 결과를 보장하지 않습니다.',
+        '온체인 거래는 실행 후 취소 또는 되돌림이 어렵고, 네트워크 수수료는 반환되지 않을 수 있습니다.',
+      ],
+      checkbox: '위 내용을 확인했고 바운티 등록 약관에 동의합니다.',
+      button: '동의하고 등록 진행',
+    };
+  }
+  return {
+    title: '작업 신청 전 확인',
+    subtitle: '작업 조건과 수행자 책임을 확인한 뒤 신청해주세요.',
+    items: [
+      '수행자는 바운티 조건, 마감일, 검수 기준, 정산 방식을 직접 확인해야 합니다.',
+      '결과물이 조건에 미달하면 수정 요청, 거부 또는 분쟁 절차가 진행될 수 있습니다.',
+      '제출물의 저작권, 라이선스, 개인정보, AI 생성물 오류와 제3자 권리 침해 책임은 수행자에게 있습니다.',
+      '보상은 의뢰자 승인 또는 스마트 컨트랙트 조건에 따라 지급되며, 플랫폼이 지급 결과를 보장하지 않습니다.',
+    ],
+    checkbox: '작업 조건과 수행자 책임을 확인했고 약관에 동의합니다.',
+    button: '동의하고 신청 진행',
+  };
+}
+
+function openTermsConsent(action, onAgree) {
+  ensureTermsConsentModal();
+  const copy = getTermsConsentCopy(action);
+  window.pendingTermsAgree = onAgree;
+  document.getElementById('termsConsentTitle').textContent = copy.title;
+  document.getElementById('termsConsentSubtitle').textContent = copy.subtitle;
+  document.getElementById('termsConsentBody').innerHTML = `
+    <div class="space-y-4">
+      <div class="rounded-xl p-3 bg-sky-500/15 border border-sky-300/25 text-xs text-sky-50">
+        <div class="font-semibold mb-1">임시 운영 정보</div>
+        <div class="space-y-1 text-sky-50/85">
+          <div>운영자: <span class="font-semibold text-white">${escapeHtml(TERMS_OPERATOR_NAME)}</span> <span class="ml-1 px-1.5 py-0.5 rounded bg-sky-300/20 text-[10px] text-sky-50">임시</span></div>
+          <div>연락처: <span class="font-semibold text-white">${escapeHtml(TERMS_CONTACT)}</span> <span class="ml-1 px-1.5 py-0.5 rounded bg-sky-300/20 text-[10px] text-sky-50">임시</span></div>
+          <div>시행일자: <span class="font-semibold text-white">${escapeHtml(TERMS_EFFECTIVE_DATE)}</span> <span class="ml-1 px-1.5 py-0.5 rounded bg-sky-300/20 text-[10px] text-sky-50">임시</span></div>
+        </div>
+      </div>
+      <div class="rounded-xl p-3 bg-white/10 border border-white/15">
+        <ul class="space-y-2 text-xs text-white/85 leading-relaxed">
+          ${copy.items.map(item => `<li class="flex gap-2"><span class="text-white/45">•</span><span>${escapeHtml(item)}</span></li>`).join('')}
+        </ul>
+      </div>
+      <a href="terms.html" target="_blank" rel="noopener noreferrer" class="block text-xs text-sky-100 underline underline-offset-4">전체 이용약관 초안 보기</a>
+      <label class="flex items-start gap-2 rounded-xl p-3 bg-white/5 border border-white/10 cursor-pointer">
+        <input id="termsConsentCheck" type="checkbox" class="mt-0.5" onchange="updateTermsConsentButton()" />
+        <span class="text-xs text-white/85 leading-relaxed">${escapeHtml(copy.checkbox)}</span>
+      </label>
+      <div class="flex gap-2">
+        <button onclick="closeTermsConsentModal()" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">취소</button>
+        <button id="termsConsentConfirmBtn" onclick="confirmTermsConsent('${action}')" disabled class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm opacity-45 cursor-not-allowed">${escapeHtml(copy.button)}</button>
+      </div>
+      <p class="text-[11px] text-white/45 leading-relaxed">본 문구는 법무 검토 전 서비스 적용을 위한 초안입니다. 실제 배포 전 운영 주체, 환불 정책, 분쟁 처리 및 컨트랙트 동작과 대조해야 합니다.</p>
+    </div>
+  `;
+  const modal = document.getElementById('termsConsentModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function updateTermsConsentButton() {
+  const checked = document.getElementById('termsConsentCheck')?.checked;
+  const btn = document.getElementById('termsConsentConfirmBtn');
+  if (!btn) return;
+  btn.disabled = !checked;
+  btn.classList.toggle('opacity-45', !checked);
+  btn.classList.toggle('cursor-not-allowed', !checked);
+}
+
+function confirmTermsConsent(action) {
+  if (!document.getElementById('termsConsentCheck')?.checked) return;
+  const callback = window.pendingTermsAgree;
+  markTermsAccepted(action);
+  closeTermsConsentModal();
+  if (typeof callback === 'function') callback();
+}
 
 function ensureBountyVisibilityControls() {
   if (document.getElementById('bountyVisibilitySection')) return;
@@ -182,7 +316,7 @@ function updateMilestoneSummary() {
   }
 }
 
-function submitBounty() {
+function submitBounty(termsConfirmed = false) {
   if (!currentUser) { showWalletModal(); return; }
   const title = document.getElementById('titleInput').value.trim();
   const categoryId = document.getElementById('categoryInput').value;
@@ -238,18 +372,26 @@ function submitBounty() {
   };
 
   const axplaAmount = xplaToAxpla(String(reward));
+  if (!termsConfirmed && !hasAcceptedTerms('create')) {
+    openTermsConsent('create', () => submitBounty(true));
+    return;
+  }
   closeCreateModal();
   executeContract(executeMsg, axplaAmount, '등록 완료!').catch(() => {});
 }
 
 
 
-function applyToBounty(bountyId) {
+function applyToBounty(bountyId, termsConfirmed = false) {
   if (!currentUser) { showWalletModal(); return; }
   const b = bounties[bountyId];
   if (!b || b.status !== 'open') { showToast('이미 신청된 바운티예요'); return; }
   if (b.requester === currentUser.address) { showToast('자기 바운티에는 신청할 수 없어요'); return; }
 
+  if (!termsConfirmed && !hasAcceptedTerms('apply')) {
+    openTermsConsent('apply', () => applyToBounty(bountyId, true));
+    return;
+  }
   const matchingType = b.matchingType || 'firstcome';
   if (matchingType === 'approval') {
     openApplyMessageModal(bountyId);
@@ -280,6 +422,26 @@ function openApplyMessageModal(bountyId) {
 function closeApplyModal() {
   document.getElementById('applyModal').classList.add('hidden');
   document.getElementById('applyModal').classList.remove('flex');
+}
+
+function openMyApplication(bountyId) {
+  const b = bounties[bountyId];
+  if (!b || !b.myApplication) {
+    showToast('지원 내용을 아직 불러오지 못했어요');
+    return;
+  }
+  const appliedAt = b.myApplication.applied_at ? timeAgo(b.myApplication.applied_at * 1000) : '확인 중';
+  let html = '<div class="space-y-4">';
+  html += `<div class="comment-area rounded-xl p-3.5"><div class="text-xs text-white/55 mb-1">${getCategoryById(b.categoryId).icon} ${getCategoryById(b.categoryId).name} · 지원 완료</div><div class="font-semibold text-white text-sm">${escapeHtml(b.title)}</div></div>`;
+  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">내 지원 상태</div><div>의뢰자의 선택을 기다리는 중입니다. 선택되면 작업 진행 상태로 바뀝니다.</div><div class="mt-1 text-white/55">지원 시점: ${appliedAt}</div></div>`;
+  html += `<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">내가 보낸 지원 메시지</label><div class="bg-neutral-50 rounded-xl p-3.5 text-sm text-neutral-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(b.myApplication.message || '메시지 없음')}</div></div>`;
+  html += '<div class="flex gap-2">';
+  html += `<button onclick="closeApplyModal(); openDetail('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">바운티 보기</button>`;
+  html += '<button onclick="closeApplyModal()" class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">확인</button>';
+  html += '</div></div>';
+  document.getElementById('applyContent').innerHTML = html;
+  document.getElementById('applyModal').classList.remove('hidden');
+  document.getElementById('applyModal').classList.add('flex');
 }
 
 function submitApplication(bountyId) {
@@ -415,7 +577,10 @@ async function openDetail(bountyId) {
   html += '</div>';
 
   // 상태별 액션
-  if (b.status === 'open' && !isMine && currentUser) {
+  if (b.status === 'open' && !isMine && currentUser && b.myApplication) {
+    html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">지원 완료</div><div>이미 이 바운티에 지원했습니다. 의뢰자의 선택을 기다리는 중입니다.</div></div>';
+    html += `<button onclick="closeDetailModal(); openMyApplication('${b.id}')" class="w-full px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">내 지원 내용 보기</button>`;
+  } else if (b.status === 'open' && !isMine && currentUser) {
     const btnLabel = matchingType === 'approval' ? '지원하기 📨' : '신청하기 ✋';
     html += `<button onclick="closeDetailModal(); applyToBounty('${b.id}')" class="w-full px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">${btnLabel}</button>`;
   } else if (b.status === 'open' && isMine) {

@@ -210,6 +210,7 @@ function getMyActionItems() {
   Object.values(bounties).forEach(b => {
     if (b.requester === currentUser.address && b.status === 'review') items.push({ ...b, actionType: 'review', priority: 1 });
     else if (b.worker === currentUser.address && b.status === 'progress') items.push({ ...b, actionType: 'submit', priority: 2 });
+    else if (b.myApplication && b.status === 'open') items.push({ ...b, actionType: 'applied', priority: 3 });
     else if (b.requester === currentUser.address && b.status === 'open' && b.matchingType === 'approval') {
       items.push({ ...b, actionType: 'select-applicant', priority: 2.5 });
     }
@@ -260,6 +261,10 @@ function renderActionSection() {
       actionLabel = '🟡 작업 중';
       badge = '<span class="badge-progress text-[10px] font-semibold px-2 py-0.5 rounded-full">제출 대기</span>';
       actionBtn = `<button onclick="event.stopPropagation(); openWorkSubmit('${item.id}')" class="w-full mt-2 px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700">결과물 제출하기 →</button>`;
+    } else if (item.actionType === 'applied') {
+      actionLabel = '지원 결과 대기';
+      badge = '<span class="badge-matching-approval text-[10px] font-semibold px-2 py-0.5 rounded-full">지원 완료</span>';
+      actionBtn = `<button onclick="event.stopPropagation(); openMyApplication('${item.id}')" class="w-full mt-2 px-3 py-2 rounded-lg bg-neutral-100 text-neutral-700 text-xs font-semibold">지원 내용 보기</button>`;
     } else if (item.actionType === 'select-applicant') {
       const applicantCount = item.applicants ? Object.keys(item.applicants).length : 0;
       actionLabel = '🎯 작업자 선택';
@@ -385,6 +390,7 @@ function renderFeed() {
     const cat = getCategoryById(b.categoryId);
     const isMine = currentUser && b.requester === currentUser.address;
     const isWorker = currentUser && b.worker === currentUser.address;
+    const hasApplied = currentUser && b.myApplication;
     
     const card = document.createElement('article');
     card.className = 'feed-card rounded-2xl p-4 cursor-pointer' + (isMine ? ' my-bounty' : isWorker ? ' my-work' : '');
@@ -412,10 +418,16 @@ function renderFeed() {
     if (isWorker && !isMine) badgeHtml += '<span class="work-badge text-[10px] font-semibold px-1.5 py-0.5 rounded">내 작업</span>';
 
     // 우측 액션 — 모든 버튼 동일 크기(고정 너비), 일관된 텍스트
+    if (hasApplied && !isMine && !isWorker) badgeHtml += '<span class="badge-matching-approval text-[10px] font-semibold px-1.5 py-0.5 rounded-full">지원 완료</span>';
     const btnBase = 'action-btn w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-center transition-colors';
     const myChip = `<div class="${btnBase}" style="background:rgba(139,92,246,0.12);color:var(--bx-purple,#7357a6);border:1px solid rgba(139,92,246,0.28);cursor:default">📋 내 바운티</div>`;
     let actionHtml = '';
-    if (b.status === 'open' && !isMine && currentUser) {
+    if (b.status === 'open' && !isMine && currentUser && hasApplied) {
+      actionHtml = `<div class="w-full flex flex-col items-center gap-1.5">`
+        + `<span class="text-[10px] font-bold whitespace-nowrap" style="color:var(--bx-purple,#7357a6)">지원 대기</span>`
+        + `<button class="${btnBase} bg-neutral-100 text-neutral-700 hover:bg-neutral-200" onclick="event.stopPropagation(); openMyApplication('${b.id}')">지원 내용</button>`
+        + `</div>`;
+    } else if (b.status === 'open' && !isMine && currentUser) {
       // 지원 가능 — 강조 배지 + 버튼
       actionHtml = `<div class="w-full flex flex-col items-center gap-1.5">`
         + `<span class="text-[10px] font-bold whitespace-nowrap" style="color:var(--bx-accent-2,#c77742)">🔥 지원 가능!</span>`
@@ -471,7 +483,7 @@ function renderActivity() {
   if (!currentUser) return;
   const list = document.getElementById('activityList');
   const bountyArr = Object.values(bounties);
-  const myBounties = bountyArr.filter(b => b.requester === currentUser.address || b.worker === currentUser.address);
+  const myBounties = bountyArr.filter(b => b.requester === currentUser.address || b.worker === currentUser.address || b.myApplication);
   myBounties.sort((a, b) => b.createdAt - a.createdAt);
   const locked = myBounties.filter(b => b.requester === currentUser.address && !['done'].includes(b.status)).reduce((s, b) => s + b.reward, 0);
   const earned = myBounties.filter(b => b.worker === currentUser.address && b.status === 'done').reduce((s, b) => s + b.reward * 0.9, 0);
@@ -492,12 +504,14 @@ function renderActivity() {
   myBounties.forEach(b => {
     const cat = getCategoryById(b.categoryId);
     const isMine = b.requester === currentUser.address;
+    const isApplied = !!b.myApplication && !isMine && b.worker !== currentUser.address;
     const item = document.createElement('div');
     item.className = 'activity-card rounded-2xl p-4 cursor-pointer transition-all';
     item.onclick = () => openDetail(b.id);
     let html = '<div class="flex items-start justify-between gap-3"><div class="flex-1 min-w-0">';
     html += '<div class="flex items-center gap-2 mb-1 flex-wrap">';
     html += `<span class="text-xs text-neutral-500">${cat.icon} ${cat.name}</span>`;
+    if (isApplied) html += '<span class="badge-matching-approval text-[10px] font-semibold px-2 py-0.5 rounded-full">지원 대기</span>';
     html += `<span class="${statusInfo[b.status].cls} text-[10px] font-semibold px-2 py-0.5 rounded-full">${statusInfo[b.status].label}</span>`;
     html += `<span class="my-badge text-[10px] font-semibold px-1.5 py-0.5 rounded">${isMine ? '의뢰자' : '작업자'}</span>`;
     html += '</div>';
