@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.1';
+const APP_VERSION = 'dev-2026.06.02.2';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -588,6 +588,13 @@ async function openDetail(bountyId) {
     html += `<button onclick="closeDetailModal(); openApplicantsModal('${b.id}')" class="w-full px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">지원자 확인하기 →</button>`;
     html += `<button onclick="closeDetailModal(); cancelBounty('${b.id}')" class="w-full mt-2 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">바운티 취소</button>`;
   } else if (b.status === 'progress' && isWorker) {
+    if (b.submission) {
+      if (b.revisionRequest) {
+        html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">수정 요청 내용</div><div class="leading-relaxed whitespace-pre-wrap">${escapeHtml(b.revisionRequest)}</div></div>`;
+      } else {
+        html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">수정 요청 내용 확인 필요</div><div class="leading-relaxed">현재 배포된 컨트랙트 조회 응답에는 수정 요청 사유 필드가 없어 상세 내용을 불러올 수 없습니다. 의뢰자에게 별도 채널로 사유를 확인해야 합니다.</div></div>';
+      }
+    }
     html += `<button onclick="closeDetailModal(); openWorkSubmit('${b.id}')" class="w-full px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">결과물 제출하기</button>`;
   } else if (b.status === 'progress' && isMine) {
     html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 text-center border border-white/15">작업자가 결과물을 제출하기를 기다리는 중...</div>';
@@ -804,6 +811,7 @@ function openRejectReason(bountyId) {
   if (!b) return;
   let html = '<div class="space-y-4">';
   html += `<div class="bg-white/10 rounded-xl p-3.5 border border-white/15"><div class="text-xs text-white font-semibold mb-1">수정 요청</div><div class="text-sm text-white font-semibold">${escapeHtml(b.title)}</div><div class="text-xs text-white/70 mt-1">작업자가 무엇을 고쳐야 하는지 구체적으로 남겨주세요.</div></div>`;
+  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">현재 컨트랙트 한계</div><div class="leading-relaxed">현재 배포된 컨트랙트 조회 응답에는 수정 요청 사유를 다시 보여주는 필드가 없습니다. 트랜잭션은 실행되지만 작업자가 이 내용을 앱에서 바로 보지 못할 수 있어, 별도 채널로도 전달하는 것을 권장합니다.</div></div>';
   html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">수정 요청 내용</label><textarea id="rejectReasonInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="5" placeholder="예: 결과물 링크 접근 권한이 없습니다. 2번 요구사항에 대한 근거 자료를 추가해주세요."></textarea></div>';
   html += '<div class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-500 leading-relaxed">수정 요청도 트랜잭션으로 기록됩니다. 개인정보나 비공개 자료 원문은 적지 말고, 필요한 수정 방향만 남기는 것을 권장합니다.</div>';
   html += '<div class="flex gap-2">';

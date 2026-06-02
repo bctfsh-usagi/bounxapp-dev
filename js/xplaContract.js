@@ -118,6 +118,8 @@ function mapContractBounty(raw) {
     })),
     currentMilestone: raw.current_milestone_index,
     submission: raw.latest_summary ? { summary: raw.latest_summary, proofBundle: raw.latest_proof_hash || '', submittedAt: raw.submitted_at ? raw.submitted_at * 1000 : null } : null,
+    revisionRequest: raw.latest_reject_reason || raw.last_reject_reason || raw.reject_reason || raw.rejection_reason || raw.revision_reason || null,
+    revisionCount: raw.revision_count || raw.reject_count || raw.rejection_count || 0,
     externalLink: raw.external_link,
   };
 }
