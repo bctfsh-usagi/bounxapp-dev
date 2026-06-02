@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.9';
+const APP_VERSION = 'dev-2026.06.02.10';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -46,6 +46,13 @@ function noteHtml(kind, title, body) {
 
 function detailsHtml(title, body) {
   return `<details class="bx-details"><summary>${escapeHtml(title)}</summary><div class="bx-details-body">${escapeHtml(body)}</div></details>`;
+}
+
+function explorerAddressLink(address, label, extraClass = '') {
+  if (!address) return escapeHtml(label || '');
+  const safeAddress = escapeHtml(address);
+  const safeLabel = escapeHtml(label || address);
+  return `<a href="${EXPLORER_ADDRESS_URL}${safeAddress}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="bx-explorer-link font-mono ${extraClass}" title="XPLA 익스플로러에서 주소 보기">${safeLabel}</a>`;
 }
 
 // ============ 등록 ============
@@ -699,8 +706,8 @@ async function openDetail(bountyId) {
   }
 
   html += '<div class="space-y-2 text-xs">';
-  html += `<div class="flex justify-between text-neutral-500"><span>의뢰자</span><span class="font-mono text-neutral-700">${b.requesterShort}${isMine ? ' <span class="my-badge text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">나</span>' : ''}</span></div>`;
-  if (b.workerShort) html += `<div class="flex justify-between text-neutral-500"><span>작업자</span><span class="font-mono text-neutral-700">${b.workerShort}${isWorker ? ' <span class="my-badge text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">나</span>' : ''}</span></div>`;
+  html += `<div class="flex justify-between text-neutral-500"><span>의뢰자</span><span>${explorerAddressLink(b.requester, b.requesterShort, 'text-neutral-700')}${isMine ? ' <span class="my-badge text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">나</span>' : ''}</span></div>`;
+  if (b.workerShort) html += `<div class="flex justify-between text-neutral-500"><span>작업자</span><span>${explorerAddressLink(b.worker, b.workerShort, 'text-neutral-700')}${isWorker ? ' <span class="my-badge text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">나</span>' : ''}</span></div>`;
   html += `<div class="flex justify-between text-neutral-500"><span>Bounty ID</span><span class="font-mono text-neutral-700">#${b.numId}</span></div>`;
   html += `<div class="flex justify-between text-neutral-500"><span>컨트랙트 상태</span><span class="font-mono text-neutral-700">${b.contractStatus}</span></div>`;
   html += '</div>';
@@ -911,7 +918,7 @@ function openReview(bountyId) {
     html += noteHtml('danger', '링크 확인 필요', '제출 기록에 올바르지 않은 링크가 포함되어 표시하지 않았습니다. 작업자에게 다시 제출을 요청하세요.');
   }
   html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">결과물 요약</div><div class="bg-neutral-50 rounded-xl p-3.5 text-sm text-neutral-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(parsedSubmission.body)}</div></div>`;
-  html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">작업자 정보</div><div class="bg-neutral-50 rounded-xl p-3 text-xs"><div class="flex justify-between text-neutral-500"><span>주소</span><span class="font-mono text-neutral-700">${b.workerShort}</span></div></div></div>`;
+  html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">작업자 정보</div><div class="bg-neutral-50 rounded-xl p-3 text-xs"><div class="flex justify-between text-neutral-500"><span>주소</span><span>${explorerAddressLink(b.worker, b.workerShort, 'text-neutral-700')}</span></div></div></div>`;
   html += noteHtml('warn', '14일 안에 응답하지 않으면', '컨트랙트가 자동으로 작업자에게 정산합니다.');
   html += '<div class="flex gap-2">';
   html += `<button onclick="openRejectReason('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">수정 요청</button>`;
@@ -988,7 +995,7 @@ function openMilestoneSettlement(b, milestone, isFinal) {
   html += `<div class="text-xs text-white/65 mt-1">${escapeHtml(milestone.title)} (${milestone.percent}%)</div>`;
   html += `</div>`;
   html += '<div class="space-y-2">';
-  html += `<div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100"><div><div class="text-sm font-medium text-emerald-900">작업자 보상</div><div class="text-xs text-emerald-700">${b.workerShort} · 90%</div></div><div class="font-display font-bold text-emerald-900">${(total * 0.9).toFixed(1)}</div></div>`;
+  html += `<div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100"><div><div class="text-sm font-medium text-emerald-900">작업자 보상</div><div class="text-xs text-emerald-700">${explorerAddressLink(b.worker, b.workerShort, 'text-emerald-700')} · 90%</div></div><div class="font-display font-bold text-emerald-900">${(total * 0.9).toFixed(1)}</div></div>`;
   html += `<div class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-100"><div><div class="text-sm font-medium text-neutral-700">Validator</div><div class="text-xs text-neutral-500">검증자 · 3%</div></div><div class="font-display font-bold text-neutral-700">${(total * 0.03).toFixed(1)}</div></div>`;
   html += `<div class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-100"><div><div class="text-sm font-medium text-neutral-700">Burn</div><div class="text-xs text-neutral-500">토큰 소각 · 3%</div></div><div class="font-display font-bold text-neutral-700">${(total * 0.03).toFixed(1)}</div></div>`;
   html += `<div class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-100"><div><div class="text-sm font-medium text-neutral-700">Ecosystem · Team</div><div class="text-xs text-neutral-500">생태계 · 4%</div></div><div class="font-display font-bold text-neutral-700">${(total * 0.04).toFixed(1)}</div></div>`;
@@ -1018,7 +1025,7 @@ function openSettlement(b) {
   let html = '<div class="space-y-3">';
   html += `<div class="text-center mb-4"><div class="text-xs text-neutral-500 mb-1">총 정산액</div><div class="font-display text-3xl font-bold tracking-tight">${total} <span class="text-base font-medium text-neutral-500">XPLA</span></div></div>`;
   html += '<div class="space-y-2">';
-  html += `<div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100"><div><div class="text-sm font-medium text-emerald-900">작업자 보상</div><div class="text-xs text-emerald-700">${b.workerShort} · 90%</div></div><div class="font-display font-bold text-emerald-900">${(total * 0.9).toFixed(1)}</div></div>`;
+  html += `<div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100"><div><div class="text-sm font-medium text-emerald-900">작업자 보상</div><div class="text-xs text-emerald-700">${explorerAddressLink(b.worker, b.workerShort, 'text-emerald-700')} · 90%</div></div><div class="font-display font-bold text-emerald-900">${(total * 0.9).toFixed(1)}</div></div>`;
   html += `<div class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-100"><div><div class="text-sm font-medium text-neutral-700">Validator</div><div class="text-xs text-neutral-500">검증자 · 3%</div></div><div class="font-display font-bold text-neutral-700">${(total * 0.03).toFixed(1)}</div></div>`;
   html += `<div class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-100"><div><div class="text-sm font-medium text-neutral-700">Burn</div><div class="text-xs text-neutral-500">토큰 소각 · 3%</div></div><div class="font-display font-bold text-neutral-700">${(total * 0.03).toFixed(1)}</div></div>`;
   html += `<div class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-100"><div><div class="text-sm font-medium text-neutral-700">Ecosystem · Team</div><div class="text-xs text-neutral-500">생태계 · 4%</div></div><div class="font-display font-bold text-neutral-700">${(total * 0.04).toFixed(1)}</div></div>`;

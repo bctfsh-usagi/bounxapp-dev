@@ -4,6 +4,11 @@ let xplaController = null;
 let xplaConnectTypes = [];
 let _txPending = false;
 
+function walletEscapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 // ============ XPLA Wallet (공식 @xpla/wallet-controller) ============
 // xpla-wc.js 번들이 window.XplaWC를 제공 → 여기서 초기화
 function initXplaController() {
@@ -222,7 +227,7 @@ function showTxSuccess(actionName, txhash) {
   const short = txhash.slice(0, 10) + '...';
   t.innerHTML = '<div>' + actionName + '</div>'
     + '<div class="flex items-center gap-2 mt-1"><span class="font-mono text-xs opacity-60">' + short + '</span>'
-    + '<a href="' + EXPLORER_TX_URL + txhash + '" target="_blank" class="text-xs underline opacity-75">거래 보기</a>'
+    + '<a href="' + EXPLORER_TX_URL + txhash + '" target="_blank" rel="noopener noreferrer" class="text-xs underline opacity-75">거래 보기</a>'
     + '<button onclick="navigator.clipboard.writeText(\'' + txhash + '\');this.textContent=\'복사됨\'" class="text-xs underline opacity-75">복사</button></div>';
   t.classList.remove('hidden');
   setTimeout(() => { t.classList.add('hidden'); t.innerHTML = ''; }, 8000);
@@ -231,7 +236,7 @@ function showTxSuccess(actionName, txhash) {
 function vaultRedirect(executeMsg, axplaAmount, actionName) {
   navigator.clipboard.writeText(JSON.stringify(executeMsg)).catch(() => {});
   const vaultUrl = `https://vault.xpla.io/contract/execute/${XPLA.contract}`;
-  window.open(vaultUrl, '_blank');
+  window.open(vaultUrl, '_blank', 'noopener,noreferrer');
   const amountHint = axplaAmount && axplaAmount !== '0'
     ? ' → Amount에 ' + axplaToXpla(axplaAmount) + ' XPLA 입력'
     : '';
@@ -257,7 +262,13 @@ function updateUserUI() {
   if (!currentUser) return;
   const short = currentUser.shortAddress;
   const bal = currentUser.balance || '0';
-  ['userAddress', 'userAddressMobile'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = short; });
+  ['userAddress', 'userAddressMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const safeAddress = walletEscapeHtml(currentUser.address);
+    const safeShort = walletEscapeHtml(short);
+    el.innerHTML = `<a href="${EXPLORER_ADDRESS_URL}${safeAddress}" target="_blank" rel="noopener noreferrer" class="bx-explorer-link" title="XPLA 익스플로러에서 내 주소 보기">${safeShort}</a>`;
+  });
   ['userBalance', 'userBalanceMobile', 'userBalanceHero'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = bal; });
   document.getElementById('walletInfo')?.classList.remove('hidden');
 }
@@ -278,6 +289,12 @@ function showWalletModal() {
 
   if (currentUser) {
     document.getElementById('walletAddrInput').value = currentUser.address;
+    const modalAddr = document.getElementById('walletConnectAddress');
+    if (modalAddr) {
+      const safeAddress = walletEscapeHtml(currentUser.address);
+      const safeShort = walletEscapeHtml(currentUser.shortAddress);
+      modalAddr.innerHTML = `<a href="${EXPLORER_ADDRESS_URL}${safeAddress}" target="_blank" rel="noopener noreferrer" class="bx-explorer-link" title="XPLA 익스플로러에서 내 주소 보기">${safeShort}</a>`;
+    }
   }
 }
 function showManualConnect() {

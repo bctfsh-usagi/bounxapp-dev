@@ -10,6 +10,7 @@ const TX_FEE_GAS = 1000000;
 const TX_FEE_AMOUNT = '500000000000000000axpla';
 const TX_FEE_XPLA = 0.5;
 const EXPLORER_TX_URL = 'https://explorer.xpla.io/testnet/tx/';
+const EXPLORER_ADDRESS_URL = 'https://explorer.xpla.io/testnet/address/';
 
 async function xplaQuery(queryMsg) {
   const encoded = btoa(JSON.stringify(queryMsg));

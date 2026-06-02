@@ -411,7 +411,7 @@ function renderFeed() {
     card.onclick = (e) => { if (e.target.closest('.action-btn')) return; openDetail(b.id); };
     
     const matchingType = b.matchingType || 'firstcome';
-    const explorerUrl = 'https://explorer.xpla.io/testnet/address/' + b.requester;
+    const explorerUrl = EXPLORER_ADDRESS_URL + b.requester;
 
     // 배지 모음
     let badgeHtml = '';
@@ -480,7 +480,7 @@ function renderFeed() {
     if (b.desc) html += `<p class="text-sm text-neutral-600 leading-relaxed line-clamp-2 mb-2.5">${escapeHtml(b.desc)}</p>`;
     else html += '<div class="mb-2.5"></div>';
     html += '<div class="flex items-center gap-1.5 text-xs text-neutral-400">';
-    html += `<a href="${explorerUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="font-mono underline hover:opacity-70" style="color:var(--bx-muted,#736250);text-underline-offset:2px" title="익스플로러에서 보기">${b.requesterShort}</a>`;
+    html += `<a href="${explorerUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="bx-explorer-link font-mono" style="color:var(--bx-muted,#736250)" title="XPLA 익스플로러에서 주소 보기">${b.requesterShort}</a>`;
     html += `<span>·</span><span>${timeAgo(b.createdAt)}</span>`;
     html += '</div></div>';
 
