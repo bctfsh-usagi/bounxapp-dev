@@ -631,6 +631,7 @@
     padding: 0.75rem;
     font-size: 0.75rem;
     line-height: 1.55;
+    color: #3b3128;
   }
   .bx-note-mark {
     width: 1.25rem;
@@ -651,37 +652,37 @@
     white-space: pre-wrap;
   }
   .bx-note-info {
-    background: rgba(14, 165, 233, 0.11);
-    border-color: rgba(56, 189, 248, 0.28);
-    color: rgba(224, 242, 254, 0.92);
+    background: #eef9fc;
+    border-color: #9bdff0;
+    color: #14505f;
   }
   .bx-note-info .bx-note-mark {
-    background: rgba(14, 165, 233, 0.22);
-    color: #bae6fd;
+    background: #c8edf7;
+    color: #0f6073;
   }
   .bx-note-warn {
-    background: rgba(245, 158, 11, 0.12);
-    border-color: rgba(245, 158, 11, 0.30);
-    color: rgba(254, 243, 199, 0.94);
+    background: #fff4dc;
+    border-color: #e8c56f;
+    color: #614512;
   }
   .bx-note-warn .bx-note-mark {
-    background: rgba(245, 158, 11, 0.22);
-    color: #fde68a;
+    background: #f3d58a;
+    color: #5a3d08;
   }
   .bx-note-danger {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(248, 113, 113, 0.32);
-    color: rgba(254, 226, 226, 0.94);
+    background: #fff0ee;
+    border-color: #f0aaa2;
+    color: #743027;
   }
   .bx-note-danger .bx-note-mark {
-    background: rgba(239, 68, 68, 0.24);
-    color: #fecaca;
+    background: #f5c1ba;
+    color: #7a251b;
   }
   .bx-details {
     border-radius: 0.75rem;
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.82);
+    border: 1px solid #dccab2;
+    background: #fffaf4;
+    color: #5f5245;
     font-size: 0.75rem;
   }
   .bx-details summary {
@@ -689,7 +690,7 @@
     list-style: none;
     padding: 0.75rem;
     font-weight: 700;
-    color: #fff;
+    color: #2f261f;
   }
   .bx-details summary::-webkit-details-marker {
     display: none;
@@ -703,14 +704,68 @@
     height: 1.15rem;
     border-radius: 999px;
     margin-right: 0.45rem;
-    background: rgba(148, 163, 184, 0.20);
-    color: rgba(255, 255, 255, 0.88);
+    background: #efe2d0;
+    color: #6b5440;
     font-weight: 800;
   }
   .bx-details-body {
     padding: 0 0.75rem 0.75rem;
     line-height: 1.55;
-    color: rgba(255, 255, 255, 0.72);
+    color: #6f6255;
+  }
+  .bx-form-section {
+    border-radius: 1rem;
+    border: 1px solid #dfccb5;
+    background: rgba(255, 250, 244, 0.75);
+    padding: 0.95rem;
+  }
+  .bx-section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #7a6048;
+    letter-spacing: 0.01em;
+    margin-bottom: 0.7rem;
+  }
+  .bx-section-kicker span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: #efe2d0;
+    color: #4a382b;
+  }
+  .visibility-option,
+  .deliverable-type-option,
+  .proof-visibility-option {
+    position: relative;
+    min-height: 4.5rem;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .visibility-option.is-selected,
+  .deliverable-type-option.is-selected,
+  .proof-visibility-option.is-selected {
+    border-color: #6f4e37 !important;
+    background: #efe3d3 !important;
+    box-shadow: inset 0 0 0 1px rgba(111, 78, 55, 0.34);
+  }
+  .visibility-option.is-selected::after,
+  .deliverable-type-option.is-selected::after,
+  .proof-visibility-option.is-selected::after {
+    content: "선택됨";
+    position: absolute;
+    top: 0.55rem;
+    right: 0.65rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #fffaf4;
+    background: #3a2b22;
+    border-radius: 999px;
+    padding: 0.15rem 0.45rem;
   }
   .comment-bubble {
     background: rgba(255, 255, 255, 0.06);
@@ -2481,6 +2536,26 @@
     background: rgba(255, 250, 242, 0.92) !important;
   }
 
+  #createModal .visibility-option.is-selected,
+  #createModal .deliverable-type-option.is-selected,
+  #workModal .proof-visibility-option.is-selected {
+    border-color: #6f4e37 !important;
+    background: #efe3d3 !important;
+    box-shadow: inset 0 0 0 1px rgba(111, 78, 55, 0.42), 0 10px 24px rgba(72, 51, 34, 0.08) !important;
+  }
+
+  #createModal .visibility-option.is-selected .text-neutral-800,
+  #createModal .deliverable-type-option.is-selected .text-neutral-800,
+  #workModal .proof-visibility-option.is-selected .text-neutral-800 {
+    color: #2f261f !important;
+  }
+
+  #createModal .visibility-option.is-selected .text-neutral-500,
+  #createModal .deliverable-type-option.is-selected .text-neutral-500,
+  #workModal .proof-visibility-option.is-selected .text-neutral-500 {
+    color: #5f5245 !important;
+  }
+
   #page-landing .hero-console .text-white,
   #page-landing .hero-console h3,
   #page-landing .hero-console h4,
@@ -3172,6 +3247,66 @@
       <div><label class="block text-sm font-medium text-neutral-700 mb-1.5">제목</label><input id="titleInput" type="text" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm" placeholder="예: 한국 부동산 정책 변화 분석" /></div>
       <div><label class="block text-sm font-medium text-neutral-700 mb-1.5">카테고리</label><select id="categoryInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm"></select></div>
       <div><label class="block text-sm font-medium text-neutral-700 mb-1.5">상세 설명</label><textarea id="descInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="3" placeholder="에이전트가 무엇을 해야 하는지 설명해주세요"></textarea></div>
+      <div id="bountyVisibilitySection" class="bx-form-section space-y-3">
+        <div class="bx-section-kicker"><span>1</span>공개 범위</div>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="cursor-pointer">
+            <input type="radio" name="bountyVisibility" value="public" checked class="sr-only" onchange="updateBountyVisibility()" />
+            <div class="visibility-option is-selected rounded-xl p-3 border border-neutral-200 bg-neutral-50">
+              <div class="text-sm font-semibold text-neutral-800">공개 작업</div>
+              <div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">결과물 링크가 제출 기록에 남을 수 있어요.</div>
+            </div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="bountyVisibility" value="private" class="sr-only" onchange="updateBountyVisibility()" />
+            <div class="visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50">
+              <div class="text-sm font-semibold text-neutral-800">비공개 작업</div>
+              <div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">승인된 작업자와 별도 채널로 자료를 주고받아요.</div>
+            </div>
+          </label>
+        </div>
+        <div id="bountyVisibilityHint">
+          <div class="bx-note bx-note-info"><span class="bx-note-mark">!</span><div><div class="bx-note-title">공개 작업</div><div class="bx-note-body">결과물 링크가 제출 기록에 남을 수 있습니다. 공개해도 되는 링크만 사용하세요.</div></div></div>
+        </div>
+      </div>
+      <div id="createQualitySection" class="bx-form-section space-y-3">
+        <div class="bx-section-kicker"><span>2</span>결과물과 검수 기준</div>
+        <div class="bx-note bx-note-info"><span class="bx-note-mark">!</span><div><div class="bx-note-title">등록 전에 정하면 좋은 기준</div><div class="bx-note-body">결과물 형식, 승인 기준, 수정 가능 범위를 미리 적어두면 나중에 분쟁이 줄어듭니다.</div></div></div>
+        <div>
+          <label class="block text-sm font-bold text-neutral-800 mb-2">결과물 유형</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="deliverableType" value="public_link" checked class="sr-only" onchange="updateDeliverableTypeHint()" />
+              <div class="deliverable-type-option is-selected rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">공개 링크</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">공개 가능한 URL, 데모, 문서 링크를 제출합니다.</div></div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="deliverableType" value="github" class="sr-only" onchange="updateDeliverableTypeHint()" />
+              <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">GitHub PR / Repo</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">PR, repository, commit, issue 링크를 사용합니다.</div></div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="deliverableType" value="document" class="sr-only" onchange="updateDeliverableTypeHint()" />
+              <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">문서 / 번역</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">문서 링크, 번역본, 리서치 결과를 제출합니다.</div></div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="deliverableType" value="design" class="sr-only" onchange="updateDeliverableTypeHint()" />
+              <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">디자인 / Figma</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">Figma, 이미지, 화면 시안을 제출합니다.</div></div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="deliverableType" value="media" class="sr-only" onchange="updateDeliverableTypeHint()" />
+              <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">영상 / 콘텐츠</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">영상, 게시글, SNS 콘텐츠 등을 제출합니다.</div></div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="deliverableType" value="private_delivery" class="sr-only" onchange="updateDeliverableTypeHint()" />
+              <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">비공개 전달</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">민감 문서처럼 공개 기록에 링크를 남기면 안 되는 작업입니다.</div></div>
+            </label>
+          </div>
+          <div id="deliverableTypeHint" class="mt-2 text-[11px] text-neutral-600 leading-relaxed">공개 가능한 URL, 데모, 문서 링크를 결과물로 제출합니다.</div>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-neutral-800 mb-1.5">검수 기준 / 결과물 기준</label>
+          <textarea id="acceptanceCriteriaInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="3" placeholder="예: 1) 구글 문서 링크로 제출 2) 핵심 용어집 준수 3) 오탈자 검수 포함 4) 수정 요청은 마일스톤당 최대 2회"></textarea>
+        </div>
+      </div>
       <div class="grid grid-cols-2 gap-3">
         <div><label class="block text-sm font-medium text-neutral-700 mb-1.5">보상 (XPLA)</label><input id="rewardInput" type="number" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm" placeholder="100" /></div>
         <div><label class="block text-sm font-medium text-neutral-700 mb-1.5">마감</label>

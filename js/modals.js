@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.7';
+const APP_VERSION = 'dev-2026.06.02.8';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -76,6 +76,7 @@ function updateDeliverableTypeHint() {
   const meta = getDeliverableTypeMeta(selected);
   document.querySelectorAll('#createQualitySection .deliverable-type-option').forEach(option => {
     const checked = option.closest('label')?.querySelector('input')?.checked;
+    option.classList.toggle('is-selected', !!checked);
     option.classList.toggle('border-violet-300', !!checked);
     option.classList.toggle('bg-violet-50', !!checked);
   });
@@ -98,28 +99,27 @@ function ensureCreateQualityControls() {
   if (!target) return;
   const section = document.createElement('div');
   section.id = 'createQualitySection';
-  section.className = 'space-y-2';
+  section.className = 'bx-form-section space-y-3';
   section.innerHTML = `
-    <div class="rounded-xl p-3 bg-white/10 border border-white/15 text-xs text-white/85">
-      <div class="font-semibold text-white mb-1">등록 전에 정하면 좋은 기준</div>
-      <div class="leading-relaxed">결과물 형식, 승인 기준, 수정 가능 범위를 미리 적어두면 나중에 승인/수정요청/분쟁이 훨씬 줄어듭니다.</div>
-    </div>
+    <div class="bx-section-kicker"><span>2</span>결과물과 검수 기준</div>
+    ${noteHtml('info', '등록 전에 정하면 좋은 기준', '결과물 형식, 승인 기준, 수정 가능 범위를 미리 적어두면 나중에 분쟁이 줄어듭니다.')}
     <div>
-      <label class="block text-sm font-medium text-neutral-700 mb-2">결과물 유형</label>
+      <label class="block text-sm font-bold text-neutral-800 mb-2">결과물 유형</label>
       <div class="grid grid-cols-2 gap-2">
         ${Object.entries(DELIVERABLE_TYPES).map(([key, meta], idx) => `
           <label class="cursor-pointer">
             <input type="radio" name="deliverableType" value="${key}" ${idx === 0 ? 'checked' : ''} class="sr-only" onchange="updateDeliverableTypeHint()" />
             <div class="deliverable-type-option rounded-xl p-3 border border-neutral-200 bg-neutral-50">
               <div class="text-sm font-semibold text-neutral-800">${meta.label}</div>
+              <div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">${meta.hint}</div>
             </div>
           </label>
         `).join('')}
       </div>
-      <div id="deliverableTypeHint" class="mt-2 text-[11px] text-neutral-500 leading-relaxed">${DELIVERABLE_TYPES.public_link.hint}</div>
+      <div id="deliverableTypeHint" class="mt-2 text-[11px] text-neutral-600 leading-relaxed">${DELIVERABLE_TYPES.public_link.hint}</div>
     </div>
     <div>
-      <label class="block text-sm font-medium text-neutral-700 mb-1.5">검수 기준 / 결과물 기준</label>
+      <label class="block text-sm font-bold text-neutral-800 mb-1.5">검수 기준 / 결과물 기준</label>
       <textarea id="acceptanceCriteriaInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="3" placeholder="예: 1) 구글 문서 링크로 제출 2) 핵심 용어집 준수 3) 오탈자 검수 포함 4) 수정 요청은 마일스톤당 최대 2회"></textarea>
     </div>
   `;
@@ -275,25 +275,26 @@ function ensureBountyVisibilityControls() {
   if (!descWrap) return;
   const section = document.createElement('div');
   section.id = 'bountyVisibilitySection';
+  section.className = 'bx-form-section space-y-3';
   section.innerHTML = `
-    <label class="block text-sm font-medium text-neutral-700 mb-2">공개 범위</label>
+    <div class="bx-section-kicker"><span>1</span>공개 범위</div>
     <div class="grid grid-cols-2 gap-2">
       <label class="cursor-pointer">
         <input type="radio" name="bountyVisibility" value="public" checked class="sr-only" onchange="updateBountyVisibility()" />
         <div class="visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50">
           <div class="text-sm font-semibold text-neutral-800">공개 작업</div>
-          <div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">결과물 링크를 공개 기록으로 검토할 수 있어요.</div>
+          <div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">결과물 링크가 제출 기록에 남을 수 있어요.</div>
         </div>
       </label>
       <label class="cursor-pointer">
         <input type="radio" name="bountyVisibility" value="private" class="sr-only" onchange="updateBountyVisibility()" />
         <div class="visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50">
           <div class="text-sm font-semibold text-neutral-800">비공개 작업</div>
-          <div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">승인된 작업자와 별도 채널로 원문을 주고받아요.</div>
+          <div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">승인된 작업자와 별도 채널로 자료를 주고받아요.</div>
         </div>
       </label>
     </div>
-    <div id="bountyVisibilityHint" class="mt-2 text-[11px] text-neutral-500 leading-relaxed"></div>
+    <div id="bountyVisibilityHint"></div>
   `;
   descWrap.insertAdjacentElement('afterend', section);
 }
@@ -302,6 +303,7 @@ function updateBountyVisibility() {
   const selected = document.querySelector('input[name="bountyVisibility"]:checked')?.value || 'public';
   document.querySelectorAll('#bountyVisibilitySection .visibility-option').forEach(option => {
     const checked = option.closest('label')?.querySelector('input')?.checked;
+    option.classList.toggle('is-selected', !!checked);
     option.classList.toggle('border-violet-300', !!checked);
     option.classList.toggle('bg-violet-50', !!checked);
   });
@@ -311,10 +313,10 @@ function updateBountyVisibility() {
   if (selected === 'private') {
     if (approval) approval.checked = true;
     if (firstcome) firstcome.disabled = true;
-    if (hint) hint.innerHTML = '비공개 작업은 선착순이 아니라 승인 필요 방식으로 고정됩니다. 제목과 설명도 온체인/공개 화면에 남을 수 있으니 민감한 원문이나 링크는 적지 마세요.';
+    if (hint) hint.innerHTML = noteHtml('warn', '비공개 작업', '선착순이 아니라 승인 필요 방식으로 고정됩니다. 제목과 설명에도 민감한 원문이나 링크는 적지 마세요.');
   } else {
     if (firstcome) firstcome.disabled = false;
-    if (hint) hint.innerHTML = '공개 작업은 결과물 링크가 제출 기록에 남을 수 있습니다. 공개해도 되는 링크만 사용하세요.';
+    if (hint) hint.innerHTML = noteHtml('info', '공개 작업', '결과물 링크가 제출 기록에 남을 수 있습니다. 공개해도 되는 링크만 사용하세요.');
   }
   updateMatchingOption();
 }
@@ -812,6 +814,7 @@ function updateProofVisibility() {
   const proofUrlInput = document.getElementById('proofUrlInput');
   document.querySelectorAll('#proofVisibilityGroup .proof-visibility-option').forEach(option => {
     const checked = option.closest('label')?.querySelector('input')?.checked;
+    option.classList.toggle('is-selected', !!checked);
     option.classList.toggle('border-violet-300', !!checked);
     option.classList.toggle('bg-violet-50', !!checked);
   });
@@ -1116,8 +1119,8 @@ openWorkSubmit = function(bountyId) {
   html += noteHtml('info', `결과물 유형: ${deliverableMeta.label}`, '제출 방식에 맞게 링크 공개 여부와 요약을 선택하세요.');
   html += detailsHtml('제출 기준 자세히', deliverableMeta.submit);
   html += '<div id="proofVisibilityGroup"><label class="block text-sm font-medium text-neutral-700 mb-2">결과물 공개 방식</label><div class="grid grid-cols-2 gap-2">';
-  html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="public" ${defaultPrivate ? '' : 'checked'} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">공개 링크</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크가 제출 기록에 남습니다.</div></div></label>`;
-  html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="private" ${defaultPrivate ? 'checked' : ''} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">비공개 제출</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크를 공개 기록에 남기지 않습니다.</div></div></label>`;
+  html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="public" ${defaultPrivate ? '' : 'checked'} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">공개 링크</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">링크가 제출 기록에 남습니다.</div></div></label>`;
+  html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="private" ${defaultPrivate ? 'checked' : ''} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">비공개 제출</div><div class="text-[11px] text-neutral-500 mt-1 pr-10 leading-relaxed">링크를 공개 기록에 남기지 않습니다.</div></div></label>`;
   html += '</div></div>';
   html += '<div id="publicProofSection"><label class="block text-sm font-medium text-neutral-700 mb-1.5">결과물 링크</label><input id="proofUrlInput" type="url" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm" placeholder="https://drive.google.com/... 또는 https://github.com/..." /></div>';
   html += `<div id="privateProofSection" class="hidden">${noteHtml('warn', '비공개 결과물 안내', '민감한 자료는 온체인 제출 내용에 적지 마세요. 별도 채널로 전달하고 여기에는 요약만 남깁니다.')}<input id="privateProofRefInput" class="input-field w-full px-3 py-2 rounded-lg text-xs mt-2" placeholder="선택: 의뢰자에게 전달한 파일명/버전/채널 메모" /></div>`;
