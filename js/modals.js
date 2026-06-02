@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.2';
+const APP_VERSION = 'dev-2026.06.02.3';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -1054,6 +1054,203 @@ function openReviewDevPreview() {
   openReview('dev-review-preview');
 }
 
+const DEV_SCENARIO_ID = 'dev-scenario-bounty';
+let devScenarioRole = 'requester';
+let devScenarioStage = 'open-approval';
+
+function getDevScenarioUsers() {
+  return {
+    requester: {
+      address: 'xpla1devrequester000000000000000000000000000',
+      shortAddress: 'xpla1dev...req',
+      balance: '100',
+      connectType: 'DEV',
+    },
+    worker: {
+      address: 'xpla1devworker00000000000000000000000000000',
+      shortAddress: 'xpla1dev...wrk',
+      balance: '100',
+      connectType: 'DEV',
+    },
+  };
+}
+
+function buildDevScenarioBounty(stage = devScenarioStage) {
+  const users = getDevScenarioUsers();
+  const now = Date.now();
+  const base = {
+    id: DEV_SCENARIO_ID,
+    numId: 20260602,
+    title: 'DEV 시나리오: 번역 작업 마일스톤 테스트',
+    desc: '등록부터 지원, 선정, 제출, 수정 요청, 재제출, 승인/정산까지 화면 흐름을 확인하기 위한 DEV 전용 바운티입니다.',
+    categoryId: 'translation',
+    reward: 10,
+    deadline: '7일',
+    createdAt: now - 3600000,
+    likes: 0,
+    requester: users.requester.address,
+    requesterShort: users.requester.shortAddress,
+    worker: '',
+    workerShort: '',
+    matchingType: 'approval',
+    paymentType: 'milestone',
+    currentMilestone: 0,
+    milestones: [
+      { id: 'm_0', title: '초안 번역 제출', percent: 40, reward: 4, status: 'active' },
+      { id: 'm_1', title: '최종본 검수 반영', percent: 60, reward: 6, status: 'pending' },
+    ],
+    status: 'open',
+    applicantCount: 1,
+    _applicants: [
+      {
+        worker: users.worker.address,
+        workerShort: users.worker.shortAddress,
+        message: '번역 문서 작업 경험이 있고, 초안과 최종본을 마일스톤별로 제출하겠습니다.',
+        applied_at: Math.floor((now - 1800000) / 1000),
+      },
+    ],
+  };
+
+  if (stage === 'open-applied') {
+    base.myApplication = base._applicants[0];
+  }
+  if (['progress', 'review-public', 'review-private', 'revision', 'done'].includes(stage)) {
+    base.status = stage === 'done' ? 'done' : (stage.startsWith('review') ? 'review' : 'progress');
+    base.worker = users.worker.address;
+    base.workerShort = users.worker.shortAddress;
+  }
+  if (stage === 'review-public') {
+    base.submission = {
+      proofBundle: '0x' + 'b'.repeat(64),
+      summary: buildSubmissionSummary('초안 번역을 완료했습니다. 링크에서 결과물과 변경 메모를 확인할 수 있습니다.', 'https://example.com/dev-proof'),
+      submittedAt: now - 600000,
+    };
+  }
+  if (stage === 'review-private') {
+    base.submission = {
+      proofBundle: '0x' + 'c'.repeat(64),
+      summary: buildSubmissionSummary('비공개 문서 번역본을 별도 승인 채널로 전달했습니다.', '', 'private'),
+      submittedAt: now - 600000,
+    };
+  }
+  if (stage === 'revision') {
+    base.submission = {
+      proofBundle: '0x' + 'd'.repeat(64),
+      summary: buildSubmissionSummary('수정 요청 반영 전 초안입니다.', 'https://example.com/dev-proof'),
+      submittedAt: now - 900000,
+    };
+    base.revisionRequest = '용어집 기준과 다르게 번역된 항목 3개를 수정하고, 최종본에는 변경 요약을 추가해주세요.';
+    base.revisionCount = 1;
+  }
+  if (stage === 'done') {
+    base.currentMilestone = 1;
+    base.milestones = [
+      { id: 'm_0', title: '초안 번역 제출', percent: 40, reward: 4, status: 'done' },
+      { id: 'm_1', title: '최종본 검수 반영', percent: 60, reward: 6, status: 'done' },
+    ];
+  }
+  if (stage === 'abandon-needed') {
+    base.status = 'progress';
+    base.worker = users.worker.address;
+    base.workerShort = users.worker.shortAddress;
+    base.desc = '작업자가 중간에 포기하고 싶은 상황을 가정합니다. 현재 앱/컨트랙트에는 포기 트랜잭션과 평판 반영 구조가 아직 없습니다.';
+    base.revisionRequest = 'DEV 메모: 포기 기능은 컨트랙트 수정이 필요한 항목입니다.';
+  }
+  return base;
+}
+
+function renderDevScenarioPanel() {
+  const content = document.getElementById('devScenarioContent');
+  if (!content) return;
+  const stages = [
+    ['open-approval', '등록됨'],
+    ['open-applied', '작업자 지원'],
+    ['progress', '선정/진행'],
+    ['review-public', '공개 제출'],
+    ['review-private', '비공개 제출'],
+    ['revision', '수정요청'],
+    ['done', '승인/정산'],
+    ['abandon-needed', '포기 필요'],
+  ];
+  const stageButtons = stages.map(([id, label]) => {
+    const active = id === devScenarioStage;
+    return `<button type="button" onclick="setDevScenarioStage('${id}')" class="px-3 py-2 rounded-lg text-xs font-semibold ${active ? 'premium-btn text-white' : 'premium-secondary-btn'}">${label}</button>`;
+  }).join('');
+  content.innerHTML = `
+    <div class="space-y-4">
+      <div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15">
+        <div class="font-semibold text-white mb-1">DEV 전용 시나리오 테스트</div>
+        <div class="leading-relaxed">실제 트랜잭션 없이 역할과 상태를 바꿔 등록부터 정산까지 화면 흐름을 확인합니다. 라이브와 실제 컨트랙트 상태에는 영향이 없습니다.</div>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-white/70 mb-2">역할</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setDevScenarioRole('requester')" class="px-3 py-2 rounded-lg text-xs font-semibold ${devScenarioRole === 'requester' ? 'premium-btn text-white' : 'premium-secondary-btn'}">의뢰자</button>
+          <button type="button" onclick="setDevScenarioRole('worker')" class="px-3 py-2 rounded-lg text-xs font-semibold ${devScenarioRole === 'worker' ? 'premium-btn text-white' : 'premium-secondary-btn'}">작업자</button>
+        </div>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-white/70 mb-2">상태</div>
+        <div class="grid grid-cols-2 gap-2">${stageButtons}</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15">
+        <div class="font-semibold text-white mb-1">확인 포인트</div>
+        <div class="leading-relaxed">수정요청 사유 표시, 비공개 제출 안내, 마일스톤 현재 단계, 포기 기능 부재 안내가 자연스러운지 확인해주세요.</div>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" onclick="openDetail('${DEV_SCENARIO_ID}')" class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">상세 화면 보기</button>
+        <button type="button" onclick="closeDevScenarioPanel()" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">닫기</button>
+      </div>
+    </div>
+  `;
+}
+
+function applyDevScenario() {
+  const users = getDevScenarioUsers();
+  currentUser = users[devScenarioRole];
+  bounties[DEV_SCENARIO_ID] = buildDevScenarioBounty(devScenarioStage);
+  if (devScenarioRole === 'worker' && devScenarioStage === 'open-applied') {
+    bounties[DEV_SCENARIO_ID].myApplication = bounties[DEV_SCENARIO_ID]._applicants[0];
+  }
+  activeStatus = 'all';
+  feedMode = 'all';
+  displayCount = PAGE_SIZE;
+  updateUserUI();
+  renderStatusTabs();
+  renderHome();
+  renderDevScenarioPanel();
+}
+
+function setDevScenarioRole(role) {
+  devScenarioRole = role;
+  applyDevScenario();
+  showToast(role === 'requester' ? 'DEV 역할: 의뢰자' : 'DEV 역할: 작업자');
+}
+
+function setDevScenarioStage(stage) {
+  devScenarioStage = stage;
+  applyDevScenario();
+  showToast('DEV 시나리오 상태가 변경됐어요');
+}
+
+function openDevScenarioPanel() {
+  if (!document.getElementById('devScenarioPanel')) {
+    const modal = document.createElement('div');
+    modal.id = 'devScenarioPanel';
+    modal.className = 'fixed inset-0 z-[80] hidden items-center justify-center p-4 modal-backdrop';
+    modal.innerHTML = '<div class="modal-content rounded-3xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto"><div class="flex items-start justify-between mb-4"><div><div class="text-xs text-white/50 font-semibold">bounX DEV</div><h3 class="text-lg font-bold text-white">시나리오 테스트</h3></div><button type="button" onclick="closeDevScenarioPanel()" class="w-9 h-9 rounded-full premium-secondary-btn text-sm font-bold">×</button></div><div id="devScenarioContent"></div></div>';
+    document.body.appendChild(modal);
+  }
+  document.getElementById('devScenarioPanel').classList.remove('hidden');
+  document.getElementById('devScenarioPanel').classList.add('flex');
+  applyDevScenario();
+}
+
+function closeDevScenarioPanel() {
+  document.getElementById('devScenarioPanel')?.classList.add('hidden');
+  document.getElementById('devScenarioPanel')?.classList.remove('flex');
+}
+
 function installProofDevPreviewButton() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('devProof') !== '1' || document.getElementById('proofDevPreviewBtn')) return;
@@ -1072,6 +1269,14 @@ function installProofDevPreviewButton() {
   reviewBtn.onclick = openReviewDevPreview;
   reviewBtn.className = 'fixed left-4 bottom-10 z-[60] px-4 py-2.5 rounded-xl premium-secondary-btn text-sm font-semibold shadow-2xl';
   document.body.appendChild(reviewBtn);
+
+  const scenarioBtn = document.createElement('button');
+  scenarioBtn.id = 'scenarioDevPreviewBtn';
+  scenarioBtn.type = 'button';
+  scenarioBtn.textContent = '시나리오 테스트';
+  scenarioBtn.onclick = openDevScenarioPanel;
+  scenarioBtn.className = 'fixed left-4 bottom-40 z-[60] px-4 py-2.5 rounded-xl premium-secondary-btn text-sm font-semibold shadow-2xl';
+  document.body.appendChild(scenarioBtn);
 }
 
 function installDevEnvironmentBadge() {
