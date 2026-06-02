@@ -622,6 +622,96 @@
     background: rgba(15, 23, 42, 0.40);
     border: 1px solid rgba(148, 163, 184, 0.14);
   }
+  .bx-note {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+  .bx-note-mark {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 800;
+    font-size: 0.8rem;
+  }
+  .bx-note-title {
+    font-weight: 700;
+    margin-bottom: 0.1rem;
+  }
+  .bx-note-body {
+    white-space: pre-wrap;
+  }
+  .bx-note-info {
+    background: rgba(14, 165, 233, 0.11);
+    border-color: rgba(56, 189, 248, 0.28);
+    color: rgba(224, 242, 254, 0.92);
+  }
+  .bx-note-info .bx-note-mark {
+    background: rgba(14, 165, 233, 0.22);
+    color: #bae6fd;
+  }
+  .bx-note-warn {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.30);
+    color: rgba(254, 243, 199, 0.94);
+  }
+  .bx-note-warn .bx-note-mark {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fde68a;
+  }
+  .bx-note-danger {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(248, 113, 113, 0.32);
+    color: rgba(254, 226, 226, 0.94);
+  }
+  .bx-note-danger .bx-note-mark {
+    background: rgba(239, 68, 68, 0.24);
+    color: #fecaca;
+  }
+  .bx-details {
+    border-radius: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.75rem;
+  }
+  .bx-details summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .bx-details summary::-webkit-details-marker {
+    display: none;
+  }
+  .bx-details summary::before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    margin-right: 0.45rem;
+    background: rgba(148, 163, 184, 0.20);
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 800;
+  }
+  .bx-details-body {
+    padding: 0 0.75rem 0.75rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.72);
+  }
   .comment-bubble {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.10);

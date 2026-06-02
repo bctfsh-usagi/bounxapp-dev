@@ -1,6 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
-const APP_VERSION = 'dev-2026.06.02.6';
+const APP_VERSION = 'dev-2026.06.02.7';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -38,6 +38,15 @@ const DELIVERABLE_TYPES = {
     submit: '실제 링크는 기록하지 말고, 별도 채널로 전달한 사실과 검토 가능한 요약만 남겨주세요.',
   },
 };
+
+function noteHtml(kind, title, body) {
+  const safeKind = ['info', 'warn', 'danger'].includes(kind) ? kind : 'info';
+  return `<div class="bx-note bx-note-${safeKind}"><span class="bx-note-mark">!</span><div><div class="bx-note-title">${escapeHtml(title)}</div><div class="bx-note-body">${escapeHtml(body)}</div></div></div>`;
+}
+
+function detailsHtml(title, body) {
+  return `<details class="bx-details"><summary>${escapeHtml(title)}</summary><div class="bx-details-body">${escapeHtml(body)}</div></details>`;
+}
 
 // ============ 등록 ============
 function openCreateModal() { 
@@ -521,9 +530,9 @@ function openApplyMessageModal(bountyId) {
 
   let html = '<div class="space-y-4">';
   html += `<div class="comment-area rounded-xl p-3.5"><div class="text-xs text-white/55 mb-1">${getCategoryById(b.categoryId).icon} ${getCategoryById(b.categoryId).name} · 🎯 승인 필요</div><div class="font-semibold text-white text-sm">${escapeHtml(b.title)}</div></div>`;
-  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">지원 메시지에 포함하면 좋은 내용</div><div class="leading-relaxed">가능 일정, 작업 방식, 관련 경험, 확인이 필요한 질문을 함께 적으면 의뢰자가 비교하기 쉽습니다.</div></div>';
+  html += noteHtml('info', '지원 팁', '일정, 작업 방식, 관련 경험, 질문을 짧게 적으면 의뢰자가 비교하기 쉽습니다.');
   html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">지원 메시지</label><textarea id="applyMessageInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="5" placeholder="예: 1) 3일 안에 초안 제출 가능 2) 관련 번역 경험 있음 3) 결과물은 구글 문서로 전달 4) 원문 용어집이 있다면 먼저 확인하고 싶습니다."></textarea></div>';
-  html += '<div class="bg-violet-50/10 rounded-xl p-3 text-xs border border-violet-100/30"><div class="font-semibold text-violet-200 mb-1">🎯 승인 대기</div><div class="text-white/60 leading-relaxed">의뢰자가 지원자 중에서 작업자를 선택합니다. 선정 전에는 보상이 지급되지 않고, 선정 후 작업 진행 상태로 바뀝니다.</div></div>';
+  html += noteHtml('warn', '승인 대기', '선정 전에는 보상이 지급되지 않고, 의뢰자가 작업자를 선택하면 진행 상태로 바뀝니다.');
   html += '<div class="flex gap-2">';
   html += '<button onclick="closeApplyModal()" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">취소</button>';
   html += `<button onclick="submitApplication('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">이 작업 지원하기</button>`;
@@ -656,7 +665,7 @@ async function openDetail(bountyId) {
   html += `<div><h2 class="font-display text-xl font-bold tracking-tight mb-2">${escapeHtml(b.title)}</h2>`;
   if (b.desc) html += `<p class="text-sm text-neutral-600 leading-relaxed whitespace-pre-wrap">${escapeHtml(b.desc)}</p>`;
   html += '</div>';
-  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">결과물 유형: ${escapeHtml(deliverableMeta.label)}</div><div class="leading-relaxed">${escapeHtml(deliverableMeta.hint)}</div></div>`;
+  html += noteHtml('info', `결과물 유형: ${deliverableMeta.label}`, deliverableMeta.hint);
   html += '<div class="grid grid-cols-2 gap-3">';
   html += `<div class="bg-neutral-50 rounded-xl p-3" style="border:1.5px solid var(--bx-line,#d9cbb8)"><div class="text-xs text-neutral-500 mb-1">보상</div><div class="font-display text-lg font-bold">${b.reward} XPLA</div></div>`;
   html += `<div class="bg-neutral-50 rounded-xl p-3" style="border:1.5px solid var(--bx-line,#d9cbb8)"><div class="text-xs text-neutral-500 mb-1">마감</div><div class="font-display text-lg font-bold">${b.deadline}</div></div>`;
@@ -707,9 +716,9 @@ async function openDetail(bountyId) {
   } else if (b.status === 'progress' && isWorker) {
     if (b.submission) {
       if (b.revisionRequest) {
-        html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">수정 요청 내용</div><div class="leading-relaxed whitespace-pre-wrap">${escapeHtml(b.revisionRequest)}</div></div>`;
+        html += noteHtml('warn', '수정 요청 내용', b.revisionRequest);
       } else {
-        html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">수정 요청 내용 확인 필요</div><div class="leading-relaxed">현재 배포된 컨트랙트 조회 응답에는 수정 요청 사유 필드가 없어 상세 내용을 불러올 수 없습니다. 의뢰자에게 별도 채널로 사유를 확인해야 합니다.</div></div>';
+        html += noteHtml('danger', '수정 요청 내용 확인 필요', '현재 컨트랙트 조회 응답에는 수정 요청 사유 필드가 없어 상세 내용을 불러올 수 없습니다. 의뢰자에게 별도 채널로 사유를 확인해야 합니다.');
       }
     }
     html += `<button onclick="closeDetailModal(); openWorkSubmit('${b.id}')" class="w-full px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">결과물 제출하기</button>`;
@@ -887,7 +896,8 @@ function openReview(bountyId) {
 
   const parsedSubmission = parseSubmissionSummary(b.submission.summary);
   const safeProofUrl = normalizeProofUrl(parsedSubmission.proofUrl);
-  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">결과물 유형: ${escapeHtml(deliverableMeta.label)}</div><div class="leading-relaxed">${escapeHtml(deliverableMeta.submit)}</div></div>`;
+  html += noteHtml('info', `결과물 유형: ${deliverableMeta.label}`, '등록된 결과물 기준에 맞춰 제출되었는지 확인하세요.');
+  html += detailsHtml('결과물 기준 자세히', deliverableMeta.submit);
   
   html += '<div class="bg-violet-50/10 rounded-xl p-3.5 border border-violet-100/30">';
   html += '<div class="flex items-center gap-2 mb-2"><svg class="w-4 h-4 text-violet-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><span class="text-xs font-semibold text-violet-200">Proof Bundle</span></div>';
@@ -895,11 +905,11 @@ function openReview(bountyId) {
   if (safeProofUrl) {
     html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">결과물 링크</div><a href="${escapeHtml(safeProofUrl)}" target="_blank" rel="noopener noreferrer" class="block bg-neutral-50 rounded-xl p-3.5 text-sm text-violet-200 underline break-all">${escapeHtml(safeProofUrl)}</a></div>`;
   } else if (parsedSubmission.proofUrl) {
-    html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">링크 확인 필요</div><div class="leading-relaxed">제출 기록에 올바르지 않은 링크가 포함되어 표시하지 않았습니다. 작업자에게 다시 제출을 요청하세요.</div></div>';
+    html += noteHtml('danger', '링크 확인 필요', '제출 기록에 올바르지 않은 링크가 포함되어 표시하지 않았습니다. 작업자에게 다시 제출을 요청하세요.');
   }
   html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">결과물 요약</div><div class="bg-neutral-50 rounded-xl p-3.5 text-sm text-neutral-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(parsedSubmission.body)}</div></div>`;
   html += `<div><div class="text-sm font-medium text-neutral-700 mb-2">작업자 정보</div><div class="bg-neutral-50 rounded-xl p-3 text-xs"><div class="flex justify-between text-neutral-500"><span>주소</span><span class="font-mono text-neutral-700">${b.workerShort}</span></div></div></div>`;
-  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">⏰ 14일 안에 응답하지 않으면</div><div>컨트랙트가 자동으로 작업자에게 정산합니다</div></div>';
+  html += noteHtml('warn', '14일 안에 응답하지 않으면', '컨트랙트가 자동으로 작업자에게 정산합니다.');
   html += '<div class="flex gap-2">';
   html += `<button onclick="openRejectReason('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">수정 요청</button>`;
 
@@ -944,9 +954,9 @@ function openRejectReason(bountyId) {
   if (!b) return;
   let html = '<div class="space-y-4">';
   html += `<div class="bg-white/10 rounded-xl p-3.5 border border-white/15"><div class="text-xs text-white font-semibold mb-1">수정 요청</div><div class="text-sm text-white font-semibold">${escapeHtml(b.title)}</div><div class="text-xs text-white/70 mt-1">작업자가 무엇을 고쳐야 하는지 구체적으로 남겨주세요.</div></div>`;
-  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">현재 컨트랙트 한계</div><div class="leading-relaxed">현재 배포된 컨트랙트 조회 응답에는 수정 요청 사유를 다시 보여주는 필드가 없습니다. 트랜잭션은 실행되지만 작업자가 이 내용을 앱에서 바로 보지 못할 수 있어, 별도 채널로도 전달하는 것을 권장합니다.</div></div>';
+  html += noteHtml('danger', '현재 컨트랙트 한계', '수정 요청 사유가 앱에서 다시 표시되지 않을 수 있어, 지금은 별도 채널 전달도 필요합니다.');
   html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">수정 요청 내용</label><textarea id="rejectReasonInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="5" placeholder="예: 결과물 링크 접근 권한이 없습니다. 2번 요구사항에 대한 근거 자료를 추가해주세요."></textarea></div>';
-  html += '<div class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-500 leading-relaxed">수정 요청도 트랜잭션으로 기록됩니다. 개인정보나 비공개 자료 원문은 적지 말고, 필요한 수정 방향만 남기는 것을 권장합니다.</div>';
+  html += noteHtml('warn', '기록 주의', '개인정보나 비공개 자료 원문은 적지 말고, 필요한 수정 방향만 남겨주세요.');
   html += '<div class="flex gap-2">';
   html += `<button onclick="openReview('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">돌아가기</button>`;
   html += `<button onclick="submitRejectWork('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">수정 요청 보내기</button>`;
@@ -1037,8 +1047,8 @@ function openAbandonInfo(bountyId) {
   if (!b) return;
   let html = '<div class="space-y-4">';
   html += `<div class="bg-white/10 rounded-xl p-3.5 border border-white/15"><div class="text-xs text-white font-semibold mb-1">작업 포기 안내</div><div class="text-sm text-white font-semibold">${escapeHtml(b.title)}</div><div class="text-xs text-white/70 mt-1">포기 기록은 의뢰자에게 표시되고, 이후 평가 시스템에 반영되는 흐름으로 설계하는 것이 좋습니다.</div></div>`;
-  html += '<div class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 leading-relaxed">현재 연결된 컨트랙트에는 작업자가 직접 포기하는 트랜잭션이 아직 보이지 않습니다. 지금은 의뢰자에게 연락해 재배정/취소를 처리해야 하고, 다음 단계에서 abandon_work 같은 명령과 평가 기록을 컨트랙트에 추가해야 합니다.</div>';
-  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">권장 규칙</div><div class="leading-relaxed">결과물 제출 전에는 포기 가능, 제출 후에는 단순 포기보다 수정 요청/분쟁 절차로 이동하는 편이 안전합니다.</div></div>';
+  html += noteHtml('danger', '현재 컨트랙트 한계', '작업자가 직접 포기하는 트랜잭션은 아직 없습니다. 지금은 의뢰자에게 연락해 재배정/취소를 처리해야 합니다.');
+  html += noteHtml('warn', '권장 규칙', '결과물 제출 전에는 포기 가능, 제출 후에는 수정 요청/분쟁 절차로 이동하는 편이 안전합니다.');
   html += '<button onclick="openDetail(\'' + b.id + '\')" class="w-full px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">확인</button>';
   html += '</div>';
   document.getElementById('detailContent').innerHTML = html;
@@ -1054,11 +1064,11 @@ openReview = function(bountyId) {
   const parsed = parseSubmissionSummary(b.submission.summary);
   const buttonRow = Array.from(content.querySelectorAll('.flex.gap-2')).pop();
   if (parsed.visibility === 'private' && !document.getElementById('privateSubmissionNotice')) {
-    content.insertAdjacentHTML('afterbegin', '<div id="privateSubmissionNotice" class="mb-4 bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">비공개 제출</div><div class="leading-relaxed">결과물 링크는 공개 기록에 남기지 않았습니다. 의뢰자와 합의한 별도 채널에서 받은 자료를 확인한 뒤 승인하세요.</div></div>');
+    content.insertAdjacentHTML('afterbegin', `<div id="privateSubmissionNotice" class="mb-4">${noteHtml('warn', '비공개 제출', '결과물 링크는 공개 기록에 남기지 않았습니다. 별도 채널에서 받은 자료를 확인한 뒤 승인하세요.')}</div>`);
   }
   if (buttonRow && !document.getElementById('revisionPolicyNotice')) {
     buttonRow.insertAdjacentHTML('beforebegin', `<div id="approvalChecklist" class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 border border-neutral-200"><div class="font-semibold text-neutral-800 mb-2">승인 전 체크리스트</div><label class="flex items-start gap-2 mb-1.5"><input type="checkbox" class="mt-0.5" /><span>등록된 작업 범위와 결과물이 일치합니다.</span></label><label class="flex items-start gap-2 mb-1.5"><input type="checkbox" class="mt-0.5" /><span>${parsed.visibility === 'private' ? '별도 채널로 받은 비공개 결과물을 확인했습니다.' : '결과물 링크에 접근할 수 있고 내용을 확인했습니다.'}</span></label><label class="flex items-start gap-2"><input type="checkbox" class="mt-0.5" /><span>승인하면 해당 마일스톤 보상이 정산되는 것을 이해했습니다.</span></label></div>`);
-    buttonRow.insertAdjacentHTML('beforebegin', `<div id="revisionPolicyNotice" class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15 leading-relaxed">수정 요청은 마일스톤당 최대 ${MAX_REVISION_REQUESTS}회를 권장합니다. 계속 반려되거나 의뢰자가 반복해서 거절하는 경우에는 분쟁/평가 절차로 넘기는 구조가 필요합니다.</div>`);
+    buttonRow.insertAdjacentHTML('beforebegin', `<div id="revisionPolicyNotice">${noteHtml('warn', '수정 요청 원칙', `수정 요청은 마일스톤당 최대 ${MAX_REVISION_REQUESTS}회를 권장합니다. 이후에는 분쟁/평가 절차로 넘기는 구조가 필요합니다.`)}</div>`);
     const approveButton = buttonRow.querySelector('button[onclick*="approveWork"]');
     if (approveButton) approveButton.setAttribute('onclick', `approveWorkWithChecklist('${b.id}')`);
   }
@@ -1071,7 +1081,7 @@ openRejectReason = function(bountyId) {
   const buttonRow = Array.from(content?.querySelectorAll('.flex.gap-2') || []).pop();
   if (buttonRow && !document.getElementById('rejectLimitNotice')) {
     buttonRow.insertAdjacentHTML('beforebegin', '<div id="rejectTemplateTools" class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 border border-neutral-200"><div class="font-semibold text-neutral-800 mb-2">수정요청 템플릿</div><div class="grid grid-cols-1 gap-1.5"><button type="button" onclick="fillRejectTemplate(\'결과물 링크 접근 권한이 없어 확인할 수 없습니다. 접근 권한을 열어주시거나 확인 가능한 링크를 다시 제출해주세요.\')" class="px-3 py-2 rounded-lg bg-white border border-neutral-200 text-left">링크 접근 권한 문제</button><button type="button" onclick="fillRejectTemplate(\'등록된 검수 기준 중 일부가 충족되지 않았습니다. 누락된 항목을 보완하고, 변경 요약을 함께 남겨주세요.\')" class="px-3 py-2 rounded-lg bg-white border border-neutral-200 text-left">검수 기준 미충족</button><button type="button" onclick="fillRejectTemplate(\'결과물 요약만으로는 확인이 어렵습니다. 어떤 파일/문서에서 무엇을 확인해야 하는지 구체적인 위치를 추가해주세요.\')" class="px-3 py-2 rounded-lg bg-white border border-neutral-200 text-left">확인 방법 부족</button></div></div>');
-    buttonRow.insertAdjacentHTML('beforebegin', `<div id="rejectLimitNotice" class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">수정 요청 원칙</div><div class="leading-relaxed">마일스톤당 수정 요청은 최대 ${MAX_REVISION_REQUESTS}회를 권장합니다. 이후에도 해결되지 않으면 반복 반려 대신 분쟁/평가 절차로 넘겨야 합니다.</div></div>`);
+    buttonRow.insertAdjacentHTML('beforebegin', `<div id="rejectLimitNotice">${noteHtml('warn', '수정 요청 원칙', `마일스톤당 수정 요청은 최대 ${MAX_REVISION_REQUESTS}회를 권장합니다. 이후에는 반복 반려 대신 분쟁/평가 절차로 넘겨야 합니다.`)}</div>`);
   }
 };
 
@@ -1103,17 +1113,18 @@ openWorkSubmit = function(bountyId) {
     html += '</div>';
   }
 
-  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">결과물 유형: ${escapeHtml(deliverableMeta.label)}</div><div class="leading-relaxed">${escapeHtml(deliverableMeta.submit)}</div></div>`;
+  html += noteHtml('info', `결과물 유형: ${deliverableMeta.label}`, '제출 방식에 맞게 링크 공개 여부와 요약을 선택하세요.');
+  html += detailsHtml('제출 기준 자세히', deliverableMeta.submit);
   html += '<div id="proofVisibilityGroup"><label class="block text-sm font-medium text-neutral-700 mb-2">결과물 공개 방식</label><div class="grid grid-cols-2 gap-2">';
   html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="public" ${defaultPrivate ? '' : 'checked'} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">공개 링크</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크가 제출 기록에 남습니다.</div></div></label>`;
   html += `<label class="cursor-pointer"><input type="radio" name="proofVisibility" value="private" ${defaultPrivate ? 'checked' : ''} class="sr-only" onchange="updateProofVisibility()" /><div class="proof-visibility-option rounded-xl p-3 border border-neutral-200 bg-neutral-50"><div class="text-sm font-semibold text-neutral-800">비공개 제출</div><div class="text-[11px] text-neutral-500 mt-1 leading-relaxed">링크를 공개 기록에 남기지 않습니다.</div></div></label>`;
   html += '</div></div>';
   html += '<div id="publicProofSection"><label class="block text-sm font-medium text-neutral-700 mb-1.5">결과물 링크</label><input id="proofUrlInput" type="url" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm" placeholder="https://drive.google.com/... 또는 https://github.com/..." /></div>';
-  html += '<div id="privateProofSection" class="hidden bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">비공개 결과물 안내</div><div class="leading-relaxed">번역 원문, 문서 링크, 파일 링크처럼 민감한 자료는 온체인 제출 내용에 적지 마세요. 의뢰자와 합의한 외부 채널로 전달하고, 여기에는 검토 가능한 요약만 남깁니다.</div><input id="privateProofRefInput" class="input-field w-full px-3 py-2 rounded-lg text-xs mt-2" placeholder="선택: 의뢰자에게 전달한 파일명/버전/채널 메모" /></div>';
-  html += '<div class="bg-neutral-50 rounded-xl p-3 text-xs text-neutral-600 border border-neutral-200"><div class="font-semibold text-neutral-800 mb-1">제출 전 확인</div><div class="leading-relaxed">요약에는 완료한 범위, 확인 방법, 남은 이슈를 적어주세요. 공개 링크 제출 시 접근 권한을 열어두고, 비공개 제출 시 실제 링크는 공개 기록에 남기지 마세요.</div></div>';
+  html += `<div id="privateProofSection" class="hidden">${noteHtml('warn', '비공개 결과물 안내', '민감한 자료는 온체인 제출 내용에 적지 마세요. 별도 채널로 전달하고 여기에는 요약만 남깁니다.')}<input id="privateProofRefInput" class="input-field w-full px-3 py-2 rounded-lg text-xs mt-2" placeholder="선택: 의뢰자에게 전달한 파일명/버전/채널 메모" /></div>`;
+  html += noteHtml('info', '제출 전 확인', '요약에는 완료 범위, 확인 방법, 남은 이슈만 짧게 정리하세요.');
   html += '<div><label class="block text-sm font-medium text-neutral-700 mb-1.5">결과물 요약</label><textarea id="submissionInput" class="input-field w-full px-3.5 py-2.5 rounded-xl text-sm resize-none" rows="5" placeholder="작업 결과와 확인 방법을 정리해주세요..."></textarea></div>';
-  html += '<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">증빙 지문 생성</div><div class="leading-relaxed">제출 내용으로 고유 해시를 만들고 컨트랙트에는 그 해시와 요약만 기록합니다. 비공개 제출은 실제 링크를 기록하지 않습니다.</div></div>';
-  html += `<div class="bg-white/10 rounded-xl p-3 text-xs text-white/85 border border-white/15"><div class="font-semibold text-white mb-1">예상 보상</div><div>승인 시 <strong>${(submitReward * 0.9).toFixed(1)} XPLA</strong>가 정산됩니다. (90%)</div></div>`;
+  html += detailsHtml('증빙 지문 생성', '제출 내용으로 고유 해시를 만들고 컨트랙트에는 그 해시와 요약만 기록합니다. 비공개 제출은 실제 링크를 기록하지 않습니다.');
+  html += noteHtml('info', '예상 보상', `승인 시 ${(submitReward * 0.9).toFixed(1)} XPLA가 정산됩니다. (90%)`);
   html += '<div class="flex gap-2">';
   html += '<button onclick="closeWorkModal()" class="flex-1 px-4 py-2.5 rounded-xl premium-secondary-btn font-semibold text-sm">취소</button>';
   html += `<button onclick="submitWork('${b.id}')" class="flex-1 px-4 py-2.5 rounded-xl premium-btn text-white font-semibold text-sm">결과물 제출하기</button>`;
