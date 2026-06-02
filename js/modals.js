@@ -1,5 +1,6 @@
 // ============ Modals / Action Flows / XPLA Debug Panel ============
 const MAX_REVISION_REQUESTS = 2;
+const APP_VERSION = 'dev-2026.06.02.1';
 const TERMS_VERSION = '2026-06-draft';
 const TERMS_OPERATOR_NAME = 'bounX 운영팀';
 const TERMS_CONTACT = 'contact@example.com';
@@ -1073,8 +1074,8 @@ function installDevEnvironmentBadge() {
   if (!isDevHost) return;
   const badge = document.createElement('div');
   badge.id = 'devEnvironmentBadge';
-  badge.textContent = 'DEV TESTNET';
-  badge.className = 'fixed right-4 bottom-4 z-[70] px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-[11px] font-bold tracking-wide shadow-2xl backdrop-blur-md';
+  badge.innerHTML = `<span>DEV TESTNET</span><span class="text-white/45">·</span><span>${APP_VERSION}</span>`;
+  badge.className = 'fixed right-4 bottom-4 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-[11px] font-bold tracking-wide shadow-2xl backdrop-blur-md';
   document.body.appendChild(badge);
 }
 
